@@ -4,12 +4,7 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {
-      fontFamily: {
-        sans: ["Poppins", "sans-serif"],
-        orbitron: ["Orbitron", "sans-serif"],
-      },
-    },
+    extend: {},
   },
   plugins: [],
 };

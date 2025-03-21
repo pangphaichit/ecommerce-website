@@ -32,25 +32,46 @@ const Navbar = () => {
 
   return (
     <nav className="bg-white w-full relative">
-      <div className="w-full pt-4 px-4 lg:py-4 lg:px-10">
-        <div className="w-full mx-auto flex items-center justify-between">
-          {/* Left Icons (Search & Favorite) */}
-          <div className="flex items-center space-x-4">
+      <div className="w-full mx-auto flex items-center py-6 px-3 lg:py-10 lg:pr-10">
+        {/* Logo */}
+        <div className="absolute w-full flex items-center justify-center pointer-events-none">
+          <Link
+            href="/"
+            className="text-2xl font-bold text-gray-800 pointer-events-auto"
+          >
+            <Image
+              src="/landing-page/oven-and-wheat-no-tagline.png"
+              alt="Bakery Brand"
+              width={180}
+              height={180 / 1.59}
+              className="object-contain lg:w-[300px] lg:h-[300/1.59]"
+            />
+          </Link>
+        </div>
+        <div className="flex flex-row justify-between lg:justify-end lg:gap-2 w-full">
+          <div className="flex items-center lg:gap-2">
+            <div className="flex items-center">
+              {/* Hamburger Button (Mobile) */}
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="lg:hidden text-gray-800 z-50"
+              >
+                {isOpen ? <X size={28} /> : <Menu size={28} />}
+              </button>
+            </div>
             <Search
               size={24}
-              className="text-gray-800 hover:text-yellow-600 cursor-pointer"
+              className="text-gray-800 hover:text-yellow-600 cursor-pointer hidden lg:block"
             />
             <Heart
               size={24}
-              className="text-gray-800 hover:text-yellow-600 cursor-pointer"
+              className="text-gray-800 hover:text-yellow-600 cursor-pointer hidden lg:block"
             />
           </div>
-
-          {/* Right Icons (Account & Basket) */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center lg:gap-2">
             <User
               size={24}
-              className="text-gray-800 hover:text-yellow-600 cursor-pointer"
+              className="text-gray-800 hover:text-yellow-600 cursor-pointer hidden lg:block"
             />
             <ShoppingCart
               size={24}
@@ -60,39 +81,22 @@ const Navbar = () => {
         </div>
       </div>
 
-      <div className="max-w-screen-xl mx-auto flex items-center justify-between py-6 px-3 lg:pt-3">
-        {/* Logo */}
-        <div className="w-full flex items-center justify-start lg:justify-center">
-          <Link href="/" className="text-2xl font-bold text-gray-800">
-            <Image
-              src="/landing-page/oven-and-forge-no-tagline.png"
-              alt="Bakery Brand"
-              width={220}
-              height={220 / 1.59}
-              className="object-contain lg:w-[300px] lg:h-[300/1.59]"
-            />
-          </Link>
-        </div>
-
-        {/* Hamburger Button (Mobile) */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="lg:hidden text-gray-800"
-        >
-          {isOpen ? <X size={28} /> : <Menu size={28} />}
-        </button>
-      </div>
-
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="lg:hidden fixed inset-0 top-22 bg-white z-50 text-lg">
+        <div className="lg:hidden fixed inset-0 top-28 bg-white z-50 text-lg">
           {/* Close Button */}
-          <div className="flex justify-end p-4">
-            <button onClick={() => setIsOpen(false)} className="text-gray-800">
-              <X size={28} />
-            </button>
+          {/* Search Bar */}
+          <div className="flex flex-row items-center justify-center py-2">
+            <Search
+              size={24}
+              className="text-gray-800 hover:text-yellow-600 cursor-pointer hidden lg:block"
+            />
+            <input
+              type="text"
+              placeholder="Search..."
+              className="px-4 py-2 w-80 border-b-2 border-gray-300 focus:outline-none focus:border-yellow-600"
+            />
           </div>
-
           {/* Menu Items */}
           <ul className="flex flex-col items-center space-y-4 py-4">
             {routes.map((route) => (
