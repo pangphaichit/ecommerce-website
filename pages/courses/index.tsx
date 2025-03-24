@@ -1,18 +1,11 @@
 import React from "react";
-import Navbar from "../../components/Navbar";
-import NotificationBar from "../../components/landing-page-component/NotificationBar";
+import CoursesPage from "../../components/pages/CoursesPage";
 
-const Courses = () => {
+const Courses: React.FC = () => {
   return (
-    <div>
-      <NotificationBar />
-      <Navbar />
-      <h1>Our Courses</h1>
-      <p>
-        Explore the variety of courses we offer and enhance your skills with our
-        expert-led programs.
-      </p>
-    </div>
+    <>
+      <CoursesPage />
+    </>
   );
 };
 
