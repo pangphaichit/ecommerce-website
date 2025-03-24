@@ -9,8 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
     "@tailwindcss/postcss": "^4.0.13",
+    "@types/chalk": "^0.4.31",
     "autoprefixer": "^10.4.21",
+    "chalk": "^5.4.1",
     "dotenv": "^16.4.7",
     "google": "^2.1.0",
     "lucide-react": "^0.479.0",
