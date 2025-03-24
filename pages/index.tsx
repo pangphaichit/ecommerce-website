@@ -1,15 +1,11 @@
 import React from "react";
-import NotificationBar from "../components/landing-page-component/NotificationBar";
-import Navbar from "../components/Navbar";
-import ImageSlider from "../components/landing-page-component/ImageSlider";
+import HomePage from "../components/pages/HomePage";
 
 const Home: React.FC = () => {
   return (
-    <div className="w-full h-full bg-white flex flex-col">
-      <NotificationBar />
-      <Navbar />
-      <ImageSlider />
-    </div>
+    <>
+      <HomePage />
+    </>
   );
 };
 

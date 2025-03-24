@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -20,6 +20,8 @@ interface Image {
 const ImageSlider = () => {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [autoPlay, setAutoPlay] = useState<boolean>(true);
+  const autoPlayInterval = 5000;
 
   const images: Image[] = [
     {
@@ -99,11 +101,18 @@ const ImageSlider = () => {
     setCurrentIndex(index);
   };
 
+  useEffect(() => {
+    if (autoPlay) {
+      const intervalId = setInterval(nextSlide, autoPlayInterval);
+      return () => clearInterval(intervalId);
+    }
+  }, [autoPlay]);
+
   return (
     <div className="relative w-full mx-auto">
       <div className="flex flex-col lg:flex-row lg:items-center lg:w-[95%] lg:mx-auto">
         {/* Image Slider */}
-        <div className="relative w-full h-[400px] lg:w-[80%] lg:h-[490px]">
+        <div className="relative w-full h-[400px] lg:w-[80%] lg:h-[500px]">
           <div className="flex overflow-hidden relative h-full">
             {images.map((image, index) => (
               <div
@@ -135,9 +144,13 @@ const ImageSlider = () => {
               <button
                 key={index}
                 className={`w-3 h-3 rounded-full cursor-pointer transition-colors ${
-                  currentIndex === index ? "bg-yellow-600" : "bg-gray-300"
+                  currentIndex === index
+                    ? "bg-yellow-600 pointer-events-none"
+                    : "bg-gray-300"
                 }`}
                 onClick={() => goToSlide(index)}
+                onMouseEnter={() => setAutoPlay(false)}
+                onMouseLeave={() => setAutoPlay(true)}
               />
             ))}
           </div>
@@ -146,6 +159,8 @@ const ImageSlider = () => {
           <button
             onClick={prevSlide}
             className="cursor-pointer absolute left-5 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md hover:bg-gray-200 transition"
+            onMouseEnter={() => setAutoPlay(false)}
+            onMouseLeave={() => setAutoPlay(true)}
           >
             <ChevronLeft size={24} />
           </button>
@@ -154,6 +169,8 @@ const ImageSlider = () => {
           <button
             onClick={nextSlide}
             className="cursor-pointer absolute right-5 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md hover:bg-gray-200 transition"
+            onMouseEnter={() => setAutoPlay(false)}
+            onMouseLeave={() => setAutoPlay(true)}
           >
             <ChevronRight size={24} />
           </button>
@@ -161,7 +178,7 @@ const ImageSlider = () => {
 
         {/* Content */}
         <div
-          className={`w-full lg:w-1/2 px-4 py-6 lg:px-10 lg:h-[480px] ${images[currentIndex].bgColor}`}
+          className={`w-full lg:w-1/2 px-4 py-6 lg:px-10 lg:h-[500px] ${images[currentIndex].bgColor}`}
         >
           {images.map(
             (image, index) =>
@@ -187,6 +204,8 @@ const ImageSlider = () => {
                     <button
                       onClick={image.action.onClickAction}
                       className="mt-5 lg:mt-8 px-6 py-3 bg-yellow-600 text-white lg:py-5 lg:px-8 hover:bg-yellow-500 transition cursor-pointer"
+                      onMouseEnter={() => setAutoPlay(false)}
+                      onMouseLeave={() => setAutoPlay(true)}
                     >
                       {image.action.label}
                     </button>

@@ -1,18 +1,11 @@
 import React from "react";
-import Navbar from "../../components/Navbar";
-import NotificationBar from "../../components/landing-page-component/NotificationBar";
+import ProductsPage from "../../components/pages/ProductsPage";
 
-const Products = () => {
+const Products: React.FC = () => {
   return (
-    <div>
-      <NotificationBar />
-      <Navbar />
-      <h1>Our Products</h1>
-      <p>
-        Discover the range of products we offer and learn about their quality
-        and craftsmanship.
-      </p>
-    </div>
+    <>
+      <ProductsPage />
+    </>
   );
 };
 
