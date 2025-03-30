@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Menu, X, Search, Heart, User, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Image from "next/image"; //
+import Image from "next/image";
 
 const routes = [
   { name: "Home", path: "/" },
@@ -32,7 +32,7 @@ const Navbar = () => {
 
   return (
     <nav className="bg-white w-full relative">
-      <div className="w-full mx-auto flex items-center py-6 px-3 lg:py-10 lg:pr-10">
+      <div className="w-full mx-auto flex items-center py-6 lg:py-10 lg:pr-10">
         {/* Logo */}
         <div className="absolute w-full flex items-center justify-center pointer-events-none">
           <Link
@@ -50,7 +50,7 @@ const Navbar = () => {
         </div>
         <div className="flex flex-row justify-between lg:justify-end lg:gap-2 w-full">
           <div className="flex items-center lg:gap-2">
-            <div className="flex items-center">
+            <div className="flex items-center pl-3 lg:pl-0">
               {/* Hamburger Button (Mobile) */}
               <button
                 onClick={() => setIsOpen(!isOpen)}
@@ -68,7 +68,7 @@ const Navbar = () => {
               className="text-gray-800 hover:text-yellow-600 cursor-pointer hidden lg:block"
             />
           </div>
-          <div className="flex items-center lg:gap-2">
+          <div className="flex items-center lg:gap-2 pr-3 lg:pr-0">
             <User
               size={24}
               className="text-gray-800 hover:text-yellow-600 cursor-pointer hidden lg:block"

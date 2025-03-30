@@ -9,10 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^6.4.8",
     "@supabase/supabase-js": "^2.49.1",
     "@tailwindcss/postcss": "^4.0.13",
     "@types/chalk": "^0.4.31",
     "autoprefixer": "^10.4.21",
+    "axios": "^1.8.4",
     "chalk": "^5.4.1",
     "dotenv": "^16.4.7",
     "google": "^2.1.0",
@@ -22,13 +26,15 @@
     "postcss": "^8.5.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tailwindcss": "^4.0.13"
+    "tailwindcss": "^4.0.13",
+    "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/pg": "^8.11.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/zxcvbn": "^4.4.5",
     "typescript": "^5"
   }
 }
