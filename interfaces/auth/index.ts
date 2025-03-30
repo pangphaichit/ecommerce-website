@@ -26,3 +26,10 @@ export interface TouchedState {
   password: boolean;
   confirmPassword: boolean;
 }
+
+export type RegistrationRequestBody = {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+};

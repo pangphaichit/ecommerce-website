@@ -5,6 +5,8 @@ import React, {
   useEffect,
   useRef,
 } from "react";
+import axios from "axios";
+import { useAuth } from "../../../context/authentication";
 import Link from "next/link";
 import Image from "next/image";
 import zxcvbn from "zxcvbn";
@@ -26,6 +28,7 @@ import {
 } from "../../../interfaces/auth/";
 
 const RegisterForm = () => {
+  const { register } = useAuth();
   // Stores the values of each form field
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
@@ -301,54 +304,45 @@ const RegisterForm = () => {
     return !Object.values(newErrors).some((error) => error.hasError);
   };
 
-  // Handles form submission, validates the form and displays success or error alert based on response.
+  // Handles form submission.
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (validateForm()) {
-      try {
-        setAlertMessage("Registration successful!");
-        setAlertType("success");
-        setAlertOpen(true);
+    if (!validateForm()) {
+      setAlertMessage("Please correct the errors in the form.");
+      setAlertType("error");
+      setAlertOpen(true);
+      return;
+    }
 
-        // Reset form data after successful submission
-        setFormData({
-          firstName: "",
-          lastName: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-        });
+    try {
+      await register({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+      });
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.error;
 
-        setErrors({
-          firstName: { hasError: false, message: "" },
-          lastName: { hasError: false, message: "" },
-          email: { hasError: false, message: "" },
-          password: { hasError: false, message: "" },
-          confirmPassword: { hasError: false, message: "" },
-        });
-
-        setTouched({
-          firstName: false,
-          lastName: false,
-          email: false,
-          password: false,
-          confirmPassword: false,
-        });
-
-        setShowPassword(false);
-        setShowConfirmPassword(false);
-
-        setPasswordStrength(null);
-        setChecks({
-          minLength: false,
-          hasUppercase: false,
-          hasLowercase: false,
-          hasNumber: false,
-          hasSpecialChar: false,
-        });
-      } catch (error) {
-        setAlertMessage("Registration failed. Please try again.");
+        if (errorMessage?.includes("email")) {
+          setErrors((prevErrors) => ({
+            ...prevErrors,
+            email: {
+              hasError: true,
+              message: errorMessage,
+            },
+          }));
+        } else {
+          setAlertMessage(
+            errorMessage || "Registration failed. Please try again."
+          );
+          setAlertType("error");
+          setAlertOpen(true);
+        }
+      } else {
+        setAlertMessage("An unexpected error occurred. Please try again.");
         setAlertType("error");
         setAlertOpen(true);
       }
