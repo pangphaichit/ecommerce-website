@@ -1,3 +1,12 @@
+//api
+export type RegistrationRequestBody = {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+};
+
+//page
 export interface FormData {
   firstName: string;
   lastName: string;
@@ -26,10 +35,3 @@ export interface TouchedState {
   password: boolean;
   confirmPassword: boolean;
 }
-
-export type RegistrationRequestBody = {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-};
