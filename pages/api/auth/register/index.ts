@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import connectionPool from "@/utils/db";
 import supabase from "@/utils/supabase";
-import { RegistrationRequestBody } from "../../../../interfaces/auth/";
+import { RegistrationRequestBody } from "../../../../types/auth/";
 
 export default async function handler(
   req: NextApiRequest,
@@ -70,14 +70,11 @@ export default async function handler(
     }
 
     // Fetch role_id for "user" from the roles table
-    const roleQuery = `
-      SELECT role_id 
-      FROM roles 
-      WHERE name_hashed = encode(digest($1, 'sha256'), 'hex')
-    `;
+    const roleQuery = `SELECT role_id FROM roles WHERE role_name = $1`;
     const { rows: roleRows } = await client.query(roleQuery, ["user"]);
 
     if (roleRows.length === 0) {
+      await client.query("ROLLBACK");
       return res.status(500).json({ error: "Role not found" });
     }
 

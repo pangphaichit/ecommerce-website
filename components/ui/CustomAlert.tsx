@@ -1,7 +1,6 @@
 import React from "react";
 import { Alert, Snackbar } from "@mui/material";
-
-import { CustomAlertProps } from "../../interfaces/ui/";
+import { CustomAlertProps } from "../../types/ui/";
 
 const CustomAlert: React.FC<CustomAlertProps> = ({
   open,
