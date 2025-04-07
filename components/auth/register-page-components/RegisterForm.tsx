@@ -20,12 +20,13 @@ import {
 } from "lucide-react";
 import Input from "../../ui/Input";
 import CustomAlert from "../../ui/CustomAlert";
+import LoadingSpinner from "../../ui/LoadingSpinner";
 import {
   FormData,
   ErrorState,
   ValidationChecks,
   TouchedState,
-} from "../../../interfaces/auth/";
+} from "../../../types/auth/";
 
 const RegisterForm = () => {
   const { register } = useAuth();
@@ -74,6 +75,9 @@ const RegisterForm = () => {
 
   // State for tracking password strength
   const [passwordStrength, setPasswordStrength] = useState<string | null>(null);
+
+  // Loading
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // State for managing the custom alert
   const [alertOpen, setAlertOpen] = useState<boolean>(false);
@@ -315,6 +319,8 @@ const RegisterForm = () => {
       return;
     }
 
+    setIsLoading(true);
+
     try {
       await register({
         firstName: formData.firstName,
@@ -346,6 +352,8 @@ const RegisterForm = () => {
         setAlertType("error");
         setAlertOpen(true);
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -378,7 +386,9 @@ const RegisterForm = () => {
         />
       </Link>
       <div className="flex flex-col w-full lg:max-w-[800px] px-4 lg:px-10 pt-5 lg:pt-8 pb-8 mb-10 bg-white lg:shadow-md">
-        <h1 className="text-2xl font-semibold text-center pb-5">Register</h1>
+        <h1 className="text-lg lg:text-2xl font-semibold text-center pb-5">
+          Register
+        </h1>
         <form
           onSubmit={handleSubmit}
           aria-labelledby="registration-heading"
@@ -614,17 +624,29 @@ const RegisterForm = () => {
           <div>
             <button
               type="submit"
+              disabled={isLoading}
               aria-label="Create account"
               aria-describedby="terms-agreement"
-              className="w-full px-4 py-2 font-medium bg-yellow-600 text-white  hover:bg-yellow-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer"
+              className={`w-full px-4 py-2 font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                isLoading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-yellow-600 hover:bg-yellow-700 cursor-pointer"
+              } flex items-center justify-center`}
             >
-              CREATE ACCOUNT
+              {isLoading ? (
+                <>
+                  <LoadingSpinner size="sm" className="mr-2" />
+                  CREATING ACCOUNT...
+                </>
+              ) : (
+                "CREATE ACCOUNT"
+              )}
             </button>
           </div>
           <p className="text-sm lg:text-base text-center">
-            Already have an account?
+            Already have an account?{" "}
             <Link href="/log-in">
-              <span className="underline">Log in</span> <span>here.</span>
+              <span className="underline">Log in</span>
             </Link>
           </p>
         </form>
