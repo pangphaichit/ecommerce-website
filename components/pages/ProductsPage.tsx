@@ -1,6 +1,6 @@
 import React from "react";
-import Navbar from "../../components/Navbar";
-import NotificationBar from "../../components/landing-page-components/NotificationBar";
+import Navbar from "@/components/Navbar";
+import NotificationBar from "@/components/landing-page-components/NotificationBar";
 
 const ProductsPage = () => {
   return (

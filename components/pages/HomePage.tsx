@@ -1,7 +1,7 @@
 import React from "react";
-import NotificationBar from "../landing-page-components/NotificationBar";
-import Navbar from "../Navbar";
-import ImageSlider from "../landing-page-components/ImageSlider";
+import NotificationBar from "@/components/landing-page-components/NotificationBar";
+import Navbar from "@/components/Navbar";
+import ImageSlider from "@/components/landing-page-components/ImageSlider";
 
 const HomePage: React.FC = () => {
   return (

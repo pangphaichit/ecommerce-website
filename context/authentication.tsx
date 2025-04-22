@@ -8,7 +8,7 @@ import React, {
 import axios from "axios";
 import jwt from "jsonwebtoken";
 import { useRouter } from "next/router";
-import { RegisterData, LoginFormData, AuthState } from "../types/context/";
+import { RegisterData, LoginFormData, AuthState } from "@/types/context/";
 
 interface AuthContextType {
   register: (data: RegisterData) => Promise<void>;

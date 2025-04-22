@@ -1,7 +1,7 @@
 import React from "react";
-import NotificationBar from "../landing-page-components/NotificationBar";
-import Navbar from "../Navbar";
-import PrivacyPolicySection from "../../components/privacy-policy-page-components/PrivacyPolicySection";
+import NotificationBar from "@/components/landing-page-components/NotificationBar";
+import Navbar from "@/components/Navbar";
+import PrivacyPolicySection from "@/components/privacy-policy-page-components/PrivacyPolicySection";
 
 const PrivacyPolicyPage: React.FC = () => {
   return (
