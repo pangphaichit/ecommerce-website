@@ -1,14 +1,15 @@
 import { useState } from "react";
 import {
-  DollarSign,
-  Package,
   ShoppingCart,
+  DollarSign,
   Users,
+  Star,
+  AlertCircle,
   ArrowUpRight,
   ArrowDownRight,
-  Filter,
   Search,
   ChevronDown,
+  Package,
 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 
@@ -25,10 +26,7 @@ interface StatItem {
   title: string;
   value: string;
   change: string;
-  isPositive: boolean;
-  icon: React.ElementType;
-  iconBg: string;
-  iconColor: string;
+  isPositive: boolean | null;
 }
 
 interface OrderItem {
@@ -58,9 +56,6 @@ const statsData: StatItem[] = [
     value: "1,245",
     change: "-15%",
     isPositive: false,
-    icon: ShoppingCart,
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
   },
   {
     id: 2,
@@ -68,9 +63,6 @@ const statsData: StatItem[] = [
     value: "$48,574",
     change: "+8%",
     isPositive: true,
-    icon: DollarSign,
-    iconBg: "bg-green-100",
-    iconColor: "text-green-600",
   },
   {
     id: 3,
@@ -78,9 +70,20 @@ const statsData: StatItem[] = [
     value: "2,845",
     change: "+12%",
     isPositive: true,
-    icon: Users,
-    iconBg: "bg-purple-100",
-    iconColor: "text-purple-600",
+  },
+  {
+    id: 4,
+    title: "Total Reviews",
+    value: "20",
+    change: "+5%",
+    isPositive: true,
+  },
+  {
+    id: 5,
+    title: "Total Complains",
+    value: "5",
+    change: "+1%",
+    isPositive: true,
   },
 ];
 
@@ -232,51 +235,108 @@ const AdminOverviewDashboard = () => {
             Welcome back! Here's what's happening with Oven & Wheat today.
           </p>
         </div>
-        <select
-          value={timeRange}
-          onChange={(e) => setTimeRange(e.target.value)}
-          className="px-3 py-2 border rounded-md text-sm cursor-pointer"
-        >
-          <option value="7">Last 7 days</option>
-          <option value="30">Last 30 days</option>
-          <option value="month">This month</option>
-          <option value="year">This year</option>
-        </select>
+        <div className="relative">
+          <select
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value)}
+            className="px-3 py-2 pr-8 rounded-md text-sm cursor-pointer bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:border-transparent"
+          >
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="month">This month</option>
+            <option value="year">This year</option>
+          </select>
+          {/* Custom arrow */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+            <ChevronDown className="w-4 h-4" />
+          </div>
+        </div>
       </div>
-
       <div className="space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {statsData.map((stat) => (
-            <div key={stat.id} className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center">
-                <div className={`p-3 rounded-full ${stat.iconBg}`}>
-                  <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
-                </div>
-                <div className="ml-4">
-                  <h2 className="text-lg font-semibold text-gray-500">
-                    {stat.title}
-                  </h2>
-                  <p className="text-2xl font-semibold">{stat.value}</p>
-                  <div className="flex items-center text-sm">
-                    {stat.isPositive ? (
-                      <ArrowUpRight className="w-4 h-4 ml-1 text-green-500" />
-                    ) : (
-                      <ArrowDownRight className="w-4 h-4 ml-1 text-red-500" />
-                    )}
-                    <span
-                      className={`${
-                        stat.isPositive ? "text-green-500" : "text-red-500"
-                      }`}
-                    >
-                      {stat.change}
-                    </span>
-                    <span className="text-gray-400 ml-1">from last month</span>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          {statsData.map((stat) => {
+            let IconComponent;
+            let iconBg = "";
+            let iconColor = "";
+
+            switch (stat.title) {
+              case "Total Orders":
+                IconComponent = ShoppingCart;
+                iconBg = "bg-blue-100";
+                iconColor = "text-blue-600";
+                break;
+              case "Total Sales":
+                IconComponent = DollarSign;
+                iconBg = "bg-green-100";
+                iconColor = "text-green-600";
+                break;
+              case "Total Customers":
+                IconComponent = Users;
+                iconBg = "bg-purple-100";
+                iconColor = "text-purple-600";
+                break;
+              case "Total Reviews":
+                IconComponent = Star;
+                iconBg = "bg-yellow-100";
+                iconColor = "text-yellow-600";
+                break;
+              case "Total Complains":
+                IconComponent = AlertCircle;
+                iconBg = "bg-red-100";
+                iconColor = "text-red-600";
+                break;
+              default:
+                IconComponent = Users;
+                iconBg = "bg-gray-100";
+                iconColor = "text-gray-600";
+            }
+
+            return (
+              <div
+                key={stat.id}
+                className="bg-white rounded-2xl p-5 flex flex-col justify-between hover:shadow-lg transition-shadow duration-300 shadow-sm cursor-pointer"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`p-3 rounded-full ${iconBg}`}>
+                    <IconComponent className={`w-6 h-6 ${iconColor}`} />
+                  </div>
+                  <div className="text-right">
+                    <h2 className="text-sm font-medium text-gray-500">
+                      {stat.title}
+                    </h2>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stat.value}
+                    </p>
                   </div>
                 </div>
+                <div className="flex items-center text-xs text-gray-500">
+                  {stat.isPositive === true && (
+                    <>
+                      <ArrowUpRight className="w-4 h-4 text-green-500 mr-1" />
+                      <span className="text-green-500 font-medium">
+                        {stat.change}
+                      </span>
+                    </>
+                  )}
+                  {stat.isPositive === false && (
+                    <>
+                      <ArrowDownRight className="w-4 h-4 text-red-500 mr-1" />
+                      <span className="text-red-500 font-medium">
+                        {stat.change}
+                      </span>
+                    </>
+                  )}
+                  {stat.isPositive === null && (
+                    <span className="text-gray-400 font-medium">
+                      {stat.change}
+                    </span>
+                  )}
+                  <span className="ml-2">from last month</span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Recent Orders */}
@@ -289,7 +349,7 @@ const AdminOverviewDashboard = () => {
                 <input
                   placeholder="Search orders"
                   className="pl-8 w-full sm:w-[200px] bg-gray-50 rounded-md py-1.5 px-3 text-sm focus:outline-none
-      focus:ring-2 focus:ring-yellow-600 focus:border-transparent text-black cursor-pointer"
+      focus:ring-2 focus:ring-yellow-600 focus:border-transparent text-black"
                 />
               </div>
 
@@ -494,51 +554,6 @@ const AdminOverviewDashboard = () => {
                       )
                     )}
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Product Inventory */}
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="flex justify-between items-center px-6 py-4">
-            <div>
-              <h3 className="text-lg font-bold">Bakery Inventory</h3>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button className="border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer">
-                Export
-              </button>
-              <button className="bg-yellow-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-yellow-700 cursor-pointer">
-                Add Product
-              </button>
-            </div>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {inventoryData.map((product) => (
-                <div
-                  key={product.id}
-                  className="border border-gray-200 rounded-xl overflow-hidden transition-all hover:translate-y-[-4px] hover:shadow-md"
-                >
-                  <div className="h-[140px] bg-gray-100 flex items-center justify-center">
-                    <Package size={48} className="text-gray-400" />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold mb-1">{product.name}</h3>
-                    <p className="text-sm text-gray-500 mb-3">
-                      SKU: {product.id}
-                    </p>
-                    <div className="flex justify-between items-center">
-                      <Badge variant={product.statusColor}>
-                        {product.stockStatus}: {product.stock}
-                      </Badge>
-                      <button className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100">
-                        <Filter className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </div>
