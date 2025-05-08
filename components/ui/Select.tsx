@@ -67,7 +67,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             value={value}
             onChange={onChange}
             className={cn(
-              "w-full px-3 py-2 pr-8 rounded-md text-sm cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:border-transparent",
+              "w-full px-3 py-3 pr-8 rounded-md text-sm cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:border-transparent",
               hasError ? "bg-red-100" : "bg-gray-50",
               className
             )}

@@ -1,12 +1,19 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Package,
   Search,
   Plus,
-  MoreHorizontal,
   Trash,
   Check,
   X,
+  Gift,
+  Heart,
+  Egg,
+  Sparkles,
+  Ghost,
+  Flower,
+  Sun,
 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -23,12 +30,12 @@ interface Product {
   description: string;
   price: number | null;
   is_available: boolean;
-  category_id: number;
+  category_id: number | null;
   size: string;
   ingredients: string;
   allergens: string;
   nutritional_info: string;
-  season: string;
+  seasonal: string;
   collection: string;
   stock_quantity: number;
   min_order_quantity: number;
@@ -56,12 +63,12 @@ const initialProducts: Product[] = [
     price: 7.99,
     is_available: true,
     category_id: 1,
-    size: "Medium",
+    size: "none",
     ingredients: "Strawberries, flour, butter, sugar",
     allergens: "Gluten, Dairy",
     nutritional_info: "300 kcal",
-    season: "summer",
-    collection: "Summer Delights",
+    seasonal: "Valentine's",
+    collection: "Summer I Miss U",
     stock_quantity: 20,
     min_order_quantity: 1,
     image_url:
@@ -75,12 +82,12 @@ const initialProducts: Product[] = [
     price: 5.49,
     is_available: false,
     category_id: 2,
-    size: "Small",
+    size: "none",
     ingredients: "Chocolate, cream, eggs",
     allergens: "Dairy, Eggs",
     nutritional_info: "250 kcal",
-    season: "winter",
-    collection: "Winter Treats",
+    seasonal: "Christmas",
+    collection: "none",
     stock_quantity: 0,
     min_order_quantity: 1,
     image_url:
@@ -105,12 +112,12 @@ const AdminProductsDashboard = () => {
     description: "",
     price: null,
     is_available: true,
-    category_id: 1,
+    category_id: null,
     size: "",
     ingredients: "",
     allergens: "",
     nutritional_info: "",
-    season: "",
+    seasonal: "",
     collection: "",
     stock_quantity: 1,
     min_order_quantity: 1,
@@ -124,6 +131,10 @@ const AdminProductsDashboard = () => {
   const [newProductImage, setNewProductImage] = useState<File | null>(null);
   const [editProductImage, setEditProductImage] = useState<File | null>(null);
 
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
   const { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } =
     DialogComponents;
 
@@ -135,7 +146,8 @@ const AdminProductsDashboard = () => {
 
     const matchesCategory =
       categoryFilter === "all" ||
-      product.category_id.toString() === categoryFilter;
+      (product.category_id != null &&
+        product.category_id.toString() === categoryFilter);
 
     const matchesAvailability =
       availabilityFilter === "all" ||
@@ -145,102 +157,181 @@ const AdminProductsDashboard = () => {
     return matchesSearch && matchesCategory && matchesAvailability;
   });
 
-  //validate form
-  const validateProductForm = (product: Partial<Product>): ValidationErrors => {
+  const validateProductForm = (
+    product: Partial<Product>,
+    isEditMode = false
+  ): ValidationErrors => {
+    console.log("Validating product:", product);
     const errors: ValidationErrors = {};
 
-    if (!newProductImage) {
+    // Image validation
+    if (!isEditMode && !newProductImage) {
       errors.image_url = "Product image is required";
+    } else if (
+      newProductImage &&
+      typeof newProductImage === "object" &&
+      newProductImage instanceof File
+    ) {
+      const validImageTypes = ["image/jpeg", "image/png"];
+      const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+
+      if (!validImageTypes.includes(newProductImage.type)) {
+        errors.image_url = "Image must be in JPEG or PNG format";
+      } else if (newProductImage.size > maxSizeInBytes) {
+        errors.image_url = "Image size must be less than 5MB";
+      }
     }
 
-    // Required: name
+    // Name validation - Required field with sanitization
     if (!product.name || product.name.trim() === "") {
       errors.name = "Product name is required";
-    } else if (product.name.length < 3) {
-      errors.name = "Product name must be at least 3 characters";
-    } else if (product.name.length > 255) {
-      errors.name = "Product name must be less than 255 characters";
+    } else {
+      const sanitizedName = product.name.trim();
+
+      if (sanitizedName.length < 3) {
+        errors.name = "Product name must be at least 3 characters";
+      } else if (sanitizedName.length > 30) {
+        errors.name = "Product name must be less than 50 characters";
+      } else if (/[<>{}]/g.test(sanitizedName)) {
+        errors.name = "Product name contains invalid characters";
+      }
     }
 
-    // Required: price
+    // Price validation with proper decimal handling
     if (product.price === undefined || product.price === null) {
       errors.price = "Price is required";
-    } else if (isNaN(Number(product.price)) || Number(product.price) <= 0) {
-      errors.price = "Price must be greater than 0";
-    } else if (Number(product.price) > 9999999.99) {
-      errors.price = "Price exceeds maximum allowed value";
+    } else {
+      const numPrice = Number(product.price);
+
+      if (isNaN(numPrice)) {
+        errors.price = "Price must be a valid number";
+      } else if (numPrice <= 0) {
+        errors.price = "Price must be greater than 0";
+      } else if (numPrice > 9999999.99) {
+        errors.price = "Price cannot exceed 9,999,999.99";
+      } else if (!/^\d+(\.\d{1,2})?$/.test(String(product.price))) {
+        errors.price = "Price must have at most 2 decimal places";
+      }
     }
 
-    // Required: stock_quantity
+    // Stock quantity validation
     if (
       product.stock_quantity === undefined ||
-      product.stock_quantity === null
+      product.stock_quantity === null ||
+      product.stock_quantity === 0
     ) {
       errors.stock_quantity = "Stock quantity is required";
-    } else if (
-      isNaN(Number(product.stock_quantity)) ||
-      !Number.isInteger(Number(product.stock_quantity)) ||
-      Number(product.stock_quantity) < 0
-    ) {
-      errors.stock_quantity = "Stock quantity must be a non-negative integer";
+    } else {
+      const stockQty = Number(product.stock_quantity);
+
+      if (isNaN(stockQty)) {
+        errors.stock_quantity = "Stock quantity must be a valid number";
+      } else if (!Number.isInteger(stockQty)) {
+        errors.stock_quantity = "Stock quantity must be a whole number";
+      } else if (stockQty < 0) {
+        errors.stock_quantity = "Stock quantity cannot be negative";
+      } else if (stockQty > 1000000) {
+        errors.stock_quantity = "Stock quantity exceeds maximum allowed value";
+      }
     }
 
-    // Required: min_order_quantity
+    // Minimum order quantity validation
     if (
       product.min_order_quantity === undefined ||
       product.min_order_quantity === null
     ) {
       errors.min_order_quantity = "Minimum order quantity is required";
-    } else if (
-      isNaN(Number(product.min_order_quantity)) ||
-      !Number.isInteger(Number(product.min_order_quantity)) ||
-      Number(product.min_order_quantity) < 1
-    ) {
-      errors.min_order_quantity = "Minimum order quantity must be at least 1";
+    } else {
+      const minOrderQty = Number(product.min_order_quantity);
+
+      if (isNaN(minOrderQty)) {
+        errors.min_order_quantity =
+          "Minimum order quantity must be a valid number";
+      } else if (!Number.isInteger(minOrderQty)) {
+        errors.min_order_quantity =
+          "Minimum order quantity must be a whole number";
+      } else if (minOrderQty < 1) {
+        errors.min_order_quantity = "Minimum order quantity must be at least 1";
+      } else if (minOrderQty > Number(product.stock_quantity || 0)) {
+        errors.min_order_quantity =
+          "Minimum order quantity cannot exceed stock quantity";
+      }
     }
 
-    // Required: category_id
+    // Category validation
     if (!product.category_id) {
       errors.category_id = "Category is required";
+    } else if (
+      typeof product.category_id === "string" &&
+      !Number.isInteger(Number(product.category_id))
+    ) {
+      errors.category_id = "Invalid category selection";
     }
 
-    // Required: description, ingredients, allergens, nutritional_info
-    const requiredTextFields: (keyof Product)[] = [
-      "description",
-      "ingredients",
-      "allergens",
-      "nutritional_info",
+    // Required text fields validation with sanitization
+    const requiredTextFields: Array<{
+      key: keyof Product;
+      name: string;
+      minLength?: number;
+    }> = [
+      { key: "description", name: "Description", minLength: 10 },
+      { key: "ingredients", name: "Ingredients", minLength: 5 },
+      { key: "allergens", name: "Allergens" }, // Make sure allergens are included
+      { key: "nutritional_info", name: "Nutritional information" }, // Same for nutritional info
     ];
 
-    requiredTextFields.forEach((key) => {
+    requiredTextFields.forEach(({ key, name, minLength }) => {
       const value = product[key];
-      if (!value || (typeof value === "string" && value.trim() === "")) {
-        errors[key] = `${key.replace(/_/g, " ")} is required`;
+      console.log(`Validating field: ${name}, Value:`, value);
+
+      // Ensure empty strings, null, and undefined are treated as missing values
+      if (value === "" || value == null) {
+        // Explicit check for empty string and null/undefined
+        console.log(`Error: ${name} is required`); // Log error
+        errors[key] = `${name} is required`;
+      } else if (
+        minLength &&
+        typeof value === "string" &&
+        value.trim().length < minLength
+      ) {
+        console.log(`Error: ${name} must be at least ${minLength} characters`);
+        errors[key] = `${name} must be at least ${minLength} characters`;
       }
     });
 
-    // Optional fields max length check (all < 500 unless noted)
-    const optionalFields: [keyof Product, number][] = [
-      ["size", 50],
-      ["collection", 100],
-      ["ingredients", 500],
-      ["allergens", 500],
-      ["nutritional_info", 500],
-      ["description", 500],
+    // Optional fields validation
+    const optionalFields: Array<{
+      key: keyof Product;
+      name: string;
+      maxLength: number;
+    }> = [
+      { key: "size", name: "Size", maxLength: 20 },
+      { key: "collection", name: "Collection", maxLength: 30 },
+      { key: "ingredients", name: "Ingredients", maxLength: 500 },
+      { key: "allergens", name: "Allergens", maxLength: 500 },
+      {
+        key: "nutritional_info",
+        name: "Nutritional information",
+        maxLength: 500,
+      },
+      { key: "description", name: "Description", maxLength: 500 },
     ];
 
-    optionalFields.forEach(([key, maxLength]) => {
+    optionalFields.forEach(({ key, name, maxLength }) => {
       const value = product[key];
-      if (value && typeof value === "string" && value.length > maxLength) {
-        errors[key] = `${key.replace(
-          /_/g,
-          " "
-        )} must be less than ${maxLength} characters`;
+
+      // Check if the field is not empty before applying max length validation
+      if (value && typeof value === "string") {
+        if (value.length > maxLength) {
+          errors[key] = `${name} must be less than ${maxLength} characters`;
+        } else if (/[<>{}]/g.test(value)) {
+          errors[key] = `${name} contains invalid characters`;
+        }
       }
     });
 
-    // Season ENUM check
-    const validSeasons = [
+    // Seasonal ENUM validation with case-insensitive matching
+    const validSeasonal = [
       "Christmas",
       "Valentine's",
       "Easter",
@@ -249,16 +340,38 @@ const AdminProductsDashboard = () => {
       "Mother's Day",
       "Father's Day",
     ];
-    if (product.season && !validSeasons.includes(product.season)) {
-      errors.season = `Season must be one of: ${validSeasons.join(", ")}`;
+
+    if (product.seasonal) {
+      const normalizedInput = product.seasonal.trim().toLowerCase();
+      const matchedSeasonal = validSeasonal.find(
+        (seasonal) => seasonal.toLowerCase() === normalizedInput
+      );
+
+      if (!matchedSeasonal) {
+        errors.seasonal = `Seasonal must be one of: ${validSeasonal.join(
+          ", "
+        )}`;
+      } else {
+        // Auto-correct to the properly cased version
+        product.seasonal = matchedSeasonal;
+      }
     }
 
-    // Slug generation check
+    // Slug generation and validation
     if (product.name) {
-      const slug = product.name.trim().toLowerCase().replace(/\s+/g, "-");
+      const slug = product.name
+        .trim()
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, "") // Remove special chars except spaces and hyphens
+        .replace(/\s+/g, "-") // Replace spaces with hyphens
+        .replace(/-+/g, "-"); // Replace multiple hyphens with single hyphen
+
       if (slug.length > 100) {
         errors.slug =
-          "Slug generated from name must be less than 100 characters";
+          "Product name too long - generates slug exceeding 100 characters";
+      } else if (slug.length === 0) {
+        errors.slug =
+          "Product name must contain at least one alphanumeric character";
       }
     }
 
@@ -266,7 +379,7 @@ const AdminProductsDashboard = () => {
   };
 
   // Validation for Add Product form
-  const validateAddProductForm = () => {
+  const validateAddProductForm = (): boolean => {
     const errors = validateProductForm(newProduct);
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -274,14 +387,18 @@ const AdminProductsDashboard = () => {
 
   // Validation for Edit Product form
   const validateEditProductForm = () => {
-    if (!currentProduct) return false;
-    const errors = validateProductForm(currentProduct);
+    if (!currentProduct) {
+      console.error("No product found for editing");
+      return false;
+    }
+    const errors = validateProductForm(currentProduct, true);
     setEditFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  //add product
-  const handleAddProduct = () => {
+  // Add product
+  const handleAddProduct = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     // Validate form before proceeding
     if (!validateAddProductForm()) {
       return; // Stop if validation fails
@@ -303,50 +420,56 @@ const AdminProductsDashboard = () => {
       image_url: imageUrl,
     };
 
-    setProducts([...products, productToAdd]);
+    setProducts((prevProducts) => [...prevProducts, productToAdd]); // Using functional update to ensure proper re-render
+
+    // Clear form and close dialog
     setIsAddDialogOpen(false);
     setNewProduct({
       name: "",
       description: "",
       price: 0,
       is_available: true,
-      category_id: 1,
+      category_id: null,
       size: "",
       ingredients: "",
       allergens: "",
       nutritional_info: "",
-      season: "",
+      seasonal: "",
       collection: "",
       stock_quantity: 1,
       min_order_quantity: 1,
       image_url: "",
     });
     setNewProductImage(null);
-    // Clear any validation errors
+    // Clear validation errors
     setFormErrors({});
   };
 
-  //edit product
-  const handleEditProduct = () => {
+  // Edit product
+  const handleEditProduct = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
     if (!currentProduct) return;
 
     if (!validateEditProductForm()) {
       return;
     }
 
-    // Update image URL if a new image was uploaded
     let updatedProduct = { ...currentProduct };
+
     if (editProductImage) {
       updatedProduct.image_url = URL.createObjectURL(editProductImage);
     }
 
-    setProducts(
-      products.map((product) =>
+    setProducts((prevProducts) =>
+      prevProducts.map((product) =>
         product.product_id === updatedProduct.product_id
-          ? updatedProduct
+          ? updatedProduct // Replace the updated product
           : product
       )
     );
+
+    // Close dialog and reset states after update
     setIsEditDialogOpen(false);
     setCurrentProduct(null);
     setEditProductImage(null);
@@ -419,10 +542,35 @@ const AdminProductsDashboard = () => {
   };
 
   // Category options for select
-  const categoryOptions = [
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get("/api/products/categories");
+        setCategories(res.data.data);
+        console.log("Fetched categories:", res.data.data);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unknown error occurred.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const categoryOptions = categories.map((category) => ({
+    value: String(category.category_id),
+    label: category.name,
+  }));
+
+  const categoryFilterOptions = [
     { value: "all", label: "All Categories" },
-    { value: "1", label: "Tarts" },
-    { value: "2", label: "Desserts" },
+    ...categoryOptions,
   ];
 
   // Availability options for select
@@ -432,13 +580,37 @@ const AdminProductsDashboard = () => {
     { value: "unavailable", label: "Out of Stock" },
   ];
 
-  // Season options for select
-  const seasonOptions = [
-    { value: "spring", label: "Spring" },
-    { value: "summer", label: "Summer" },
-    { value: "fall", label: "Fall" },
-    { value: "winter", label: "Winter" },
+  // Seasonal options for select
+  const seasonalOptions = [
+    { value: "Christmas", label: "Christmas" },
+    { value: "Valentine's", label: "Valentine's" },
+    { value: "Easter", label: "Easter" },
+    { value: "New Year", label: "New Year" },
+    { value: "Halloween", label: "Halloween" },
+    { value: "Mother's Day", label: "Mother's Day" },
+    { value: "Father's Day", label: "Father's Day" },
   ];
+
+  const seasonalStyles: Record<
+    string,
+    { icon: React.ComponentType<{ size: number }>; bg: string }
+  > = {
+    Christmas: { icon: Gift, bg: "bg-red-600" },
+    "Valentine's": { icon: Heart, bg: "bg-pink-500" },
+    Easter: { icon: Egg, bg: "bg-purple-500" },
+    "New Year": { icon: Sparkles, bg: "bg-yellow-500" },
+    Halloween: { icon: Ghost, bg: "bg-orange-600" },
+    "Mother's Day": { icon: Flower, bg: "bg-pink-400" },
+    "Father's Day": { icon: Sun, bg: "bg-blue-600" },
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div className="p-6 flex-1 bg-gray-50">
@@ -499,7 +671,7 @@ const AdminProductsDashboard = () => {
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 w-full bg-gray-50 rounded-md py-1.5 px-3 text-sm focus:outline-none
+              className="pl-8 w-full bg-gray-50 rounded-md py-3 px-3 text-sm focus:outline-none
       focus:ring-2 focus:ring-yellow-600 focus:border-transparent text-black"
             />
           </div>
@@ -510,7 +682,7 @@ const AdminProductsDashboard = () => {
                 name="category"
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                options={categoryOptions}
+                options={categoryFilterOptions}
                 className="w-[180px] bg-gray-50"
               />
             </div>
@@ -623,7 +795,11 @@ const AdminProductsDashboard = () => {
 
                   <div className="p-4">
                     <div className="flex justify-between items-start">
-                      <h3 className="font-semibold text-lg">{product.name}</h3>
+                      <h3 className="font-semibold text-lg">
+                        {product.name.length > 20
+                          ? `${product.name.substring(0, 20)}...`
+                          : product.name}
+                      </h3>
                       {!isSelectionMode && (
                         <div className="relative">
                           <Button
@@ -636,7 +812,9 @@ const AdminProductsDashboard = () => {
                     </div>
 
                     <p className="text-sm text-gray-500 mb-3 line-clamp-2">
-                      {product.description}
+                      {product.description.length > 80
+                        ? `${product.description.substring(0, 80)}...`
+                        : product.description}
                     </p>
 
                     <div className="flex justify-between items-center mb-2">
@@ -651,12 +829,32 @@ const AdminProductsDashboard = () => {
                     </div>
 
                     <div className="flex flex-wrap gap-2 text-xs text-gray-500">
-                      <span className="bg-gray-100 px-2 py-1 rounded">
-                        {product.size}
-                      </span>
-                      <span className="bg-gray-100 px-2 py-1 rounded">
-                        {product.collection}
-                      </span>
+                      {product.seasonal &&
+                        product.seasonal !== "none" &&
+                        seasonalStyles[product.seasonal] &&
+                        (() => {
+                          const { icon: Icon, bg } =
+                            seasonalStyles[product.seasonal];
+                          return (
+                            <span
+                              className={`flex items-center gap-1 ${bg} text-white px-2 py-1 rounded`}
+                            >
+                              <Icon size={14} />
+                              {product.seasonal}
+                            </span>
+                          );
+                        })()}
+                      {product.size !== "none" && product.size && (
+                        <span className="bg-gray-100 px-2 py-1 rounded">
+                          {product.size}
+                        </span>
+                      )}
+                      {product.collection !== "none" && product.collection && (
+                        <span className="bg-gray-100 px-2 py-1 rounded">
+                          {product.collection}
+                        </span>
+                      )}
+
                       <span className="bg-gray-100 px-2 py-1 rounded">
                         Stock: {product.stock_quantity}
                       </span>
@@ -685,242 +883,264 @@ const AdminProductsDashboard = () => {
           <DialogHeader>
             <DialogTitle>Add New Product</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <EditImageUpload
-                onImageChange={(file) => setNewProductImage(file)}
-                error={!!formErrors.image_url}
-                errorMsg={formErrors.image_url}
-                required={true}
-              />
-
-              <div className="col-span-2">
-                <InputAdmin
-                  name="name"
-                  label="Product Name"
-                  value={newProduct.name}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, name: e.target.value })
-                  }
-                  error={!!formErrors.name}
-                  errorMsg={formErrors.name}
+          <form onSubmit={handleAddProduct}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <EditImageUpload
+                  onImageChange={(file) => setNewProductImage(file)}
+                  error={!!formErrors.image_url}
+                  errorMsg={formErrors.image_url}
                   required={true}
                 />
-              </div>
 
-              <div className="col-span-2">
-                <TextareaAdmin
-                  name="description"
-                  label="Description"
-                  value={newProduct.description}
-                  onChange={(e) =>
-                    setNewProduct({
-                      ...newProduct,
-                      description: e.target.value,
-                    })
-                  }
-                  error={!!formErrors.description}
-                  errorMsg={formErrors.description}
-                  required={true}
-                />
-              </div>
+                <div className="col-span-2">
+                  <InputAdmin
+                    name="name"
+                    label="Product Name"
+                    value={newProduct.name}
+                    onChange={(e) =>
+                      setNewProduct({ ...newProduct, name: e.target.value })
+                    }
+                    error={!!formErrors.name}
+                    errorMsg={formErrors.name}
+                    required={true}
+                    className="rounded-md"
+                  />
+                </div>
 
-              <div>
-                <InputAdmin
-                  name="price"
-                  label="Price ($)"
-                  type="number"
-                  value={newProduct.price?.toString()}
-                  onChange={(e) =>
-                    setNewProduct({
-                      ...newProduct,
-                      price: parseFloat(e.target.value),
-                    })
-                  }
-                  error={!!formErrors.price}
-                  errorMsg={formErrors.price}
-                  required={true}
-                />
-              </div>
+                <div className="col-span-2">
+                  <TextareaAdmin
+                    name="description"
+                    label="Description"
+                    value={newProduct.description}
+                    onChange={(e) =>
+                      setNewProduct({
+                        ...newProduct,
+                        description: e.target.value,
+                      })
+                    }
+                    error={!!formErrors.description}
+                    errorMsg={formErrors.description}
+                    required={true}
+                    className="rounded-md"
+                  />
+                </div>
 
-              <div>
-                <InputAdmin
-                  name="stock"
-                  label="Stock Quantity"
-                  type="number"
-                  value={newProduct.stock_quantity?.toString()}
-                  onChange={(e) =>
-                    setNewProduct({
-                      ...newProduct,
-                      stock_quantity: parseInt(e.target.value),
-                    })
-                  }
-                  error={!!formErrors.stock_quantity}
-                  errorMsg={formErrors.stock_quantity}
-                  required={true}
-                />
-              </div>
+                <div>
+                  <InputAdmin
+                    name="price"
+                    label="Price ($)"
+                    type="number"
+                    value={newProduct.price?.toString()}
+                    onChange={(e) =>
+                      setNewProduct({
+                        ...newProduct,
+                        price: parseFloat(e.target.value),
+                      })
+                    }
+                    error={!!formErrors.price}
+                    errorMsg={formErrors.price}
+                    required={true}
+                    className="rounded-md"
+                  />
+                </div>
 
-              <div>
-                <Select
-                  name="category"
-                  label="Category"
-                  value={newProduct.category_id?.toString()}
-                  onChange={(e) =>
-                    setNewProduct({
-                      ...newProduct,
-                      category_id: parseInt(e.target.value),
-                    })
-                  }
-                  options={[
-                    { value: "1", label: "Tarts" },
-                    { value: "2", label: "Desserts" },
-                  ]}
-                  error={!!formErrors.category_id}
-                  errorMsg={formErrors.category_id}
-                  required={true}
-                />
-              </div>
+                <div>
+                  <InputAdmin
+                    name="stock"
+                    label="Stock Quantity"
+                    type="number"
+                    value={newProduct.stock_quantity?.toString()}
+                    onChange={(e) =>
+                      setNewProduct({
+                        ...newProduct,
+                        stock_quantity: parseInt(e.target.value),
+                      })
+                    }
+                    error={!!formErrors.stock_quantity}
+                    errorMsg={formErrors.stock_quantity}
+                    required={true}
+                    className="rounded-md"
+                  />
+                </div>
 
-              <div>
-                <InputAdmin
-                  name="size"
-                  label="Size"
-                  value={newProduct.size}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, size: e.target.value })
-                  }
-                  error={!!formErrors.size}
-                  errorMsg={formErrors.size}
-                  required={false}
-                />
-              </div>
+                <div>
+                  <Select
+                    name="category"
+                    label="Category"
+                    value={
+                      newProduct.category_id
+                        ? newProduct.category_id.toString()
+                        : ""
+                    }
+                    onChange={(e) =>
+                      setNewProduct({
+                        ...newProduct,
+                        category_id: e.target.value
+                          ? parseInt(e.target.value)
+                          : null,
+                      })
+                    }
+                    options={categoryOptions}
+                    error={!!formErrors.category_id}
+                    errorMsg={formErrors.category_id}
+                    required={true}
+                  />
+                </div>
 
-              <div>
-                <InputAdmin
-                  name="collection"
-                  label="Collection"
-                  value={newProduct.collection}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, collection: e.target.value })
-                  }
-                  error={!!formErrors.collection}
-                  errorMsg={formErrors.collection}
-                  required={false}
-                />
-              </div>
+                <div>
+                  <InputAdmin
+                    name="size"
+                    label="Size"
+                    value={newProduct.size}
+                    onChange={(e) =>
+                      setNewProduct({ ...newProduct, size: e.target.value })
+                    }
+                    error={!!formErrors.size}
+                    errorMsg={formErrors.size}
+                    required={false}
+                    className="rounded-md"
+                  />
+                </div>
 
-              <div>
-                <Select
-                  name="season"
-                  label="Season"
-                  value={newProduct.season}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, season: e.target.value })
-                  }
-                  options={seasonOptions}
-                  error={!!formErrors.season}
-                  errorMsg={formErrors.season}
-                  required={false}
-                />
-              </div>
+                <div>
+                  <InputAdmin
+                    name="collection"
+                    label="Collection"
+                    value={newProduct.collection}
+                    onChange={(e) =>
+                      setNewProduct({
+                        ...newProduct,
+                        collection: e.target.value,
+                      })
+                    }
+                    error={!!formErrors.collection}
+                    errorMsg={formErrors.collection}
+                    required={false}
+                    className="rounded-md"
+                  />
+                </div>
 
-              <div className="col-span-2">
-                <TextareaAdmin
-                  name="ingredients"
-                  label="Ingredients"
-                  value={newProduct.ingredients}
-                  onChange={(e) =>
-                    setNewProduct({
-                      ...newProduct,
-                      ingredients: e.target.value,
-                    })
-                  }
-                  error={!!formErrors.ingredients}
-                  errorMsg={formErrors.ingredients}
-                  required={true}
-                />
-              </div>
+                <div>
+                  <Select
+                    name="seasonal"
+                    label="Season"
+                    value={newProduct.seasonal}
+                    onChange={(e) =>
+                      setNewProduct({ ...newProduct, seasonal: e.target.value })
+                    }
+                    options={seasonalOptions}
+                    error={!!formErrors.seasonal}
+                    errorMsg={formErrors.seasonal}
+                    required={false}
+                  />
+                </div>
 
-              <div>
-                <InputAdmin
-                  name="allergens"
-                  label="Allergens"
-                  value={newProduct.allergens}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, allergens: e.target.value })
-                  }
-                  error={!!formErrors.allergens}
-                  errorMsg={formErrors.allergens}
-                  required={true}
-                />
-              </div>
+                <div className="col-span-2">
+                  <TextareaAdmin
+                    name="ingredients"
+                    label="Ingredients"
+                    value={newProduct.ingredients}
+                    onChange={(e) =>
+                      setNewProduct({
+                        ...newProduct,
+                        ingredients: e.target.value,
+                      })
+                    }
+                    error={!!formErrors.ingredients}
+                    errorMsg={formErrors.ingredients}
+                    required={true}
+                  />
+                </div>
 
-              <div>
-                <InputAdmin
-                  name="nutritional_info"
-                  label="Nutritional Info"
-                  value={newProduct.nutritional_info}
-                  onChange={(e) =>
-                    setNewProduct({
-                      ...newProduct,
-                      nutritional_info: e.target.value,
-                    })
-                  }
-                  error={!!formErrors.nutritional_info}
-                  errorMsg={formErrors.nutritional_info}
-                  required={true}
-                />
-              </div>
+                <div className="col-span-2">
+                  <TextareaAdmin
+                    name="allergens"
+                    label="Allergens"
+                    value={newProduct.allergens}
+                    onChange={(e) =>
+                      setNewProduct({
+                        ...newProduct,
+                        allergens: e.target.value,
+                      })
+                    }
+                    error={!!formErrors.allergens}
+                    errorMsg={formErrors.allergens}
+                    required={true}
+                  />
+                </div>
 
-              <div>
-                <InputAdmin
-                  name="min_order_quantity"
-                  label="Minimum Order Quantity"
-                  type="number"
-                  value={newProduct.min_order_quantity?.toString()}
-                  onChange={(e) =>
-                    setNewProduct({
-                      ...newProduct,
-                      min_order_quantity: parseInt(e.target.value),
-                    })
-                  }
-                  error={!!formErrors.min_order_quantity}
-                  errorMsg={formErrors.min_order_quantity}
-                  required={true}
-                />
-              </div>
+                <div className="col-span-2">
+                  <TextareaAdmin
+                    name="nutritional_info"
+                    label="Nutritional Info"
+                    value={newProduct.nutritional_info}
+                    onChange={(e) =>
+                      setNewProduct({
+                        ...newProduct,
+                        nutritional_info: e.target.value,
+                      })
+                    }
+                    error={!!formErrors.nutritional_info}
+                    errorMsg={formErrors.nutritional_info}
+                    required={true}
+                  />
+                </div>
 
-              <div className="col-span-2 flex items-center gap-2">
-                <Checkbox
-                  id="is_available"
-                  name="is_available"
-                  checked={newProduct.is_available}
-                  onChange={(e) =>
-                    setNewProduct({
-                      ...newProduct,
-                      is_available: e.target.checked,
-                    })
-                  }
-                  label="Product is available for purchase"
-                />
+                <div>
+                  <InputAdmin
+                    name="min_order_quantity"
+                    label="Minimum Order Quantity"
+                    type="number"
+                    value={newProduct.min_order_quantity?.toString()}
+                    onChange={(e) =>
+                      setNewProduct({
+                        ...newProduct,
+                        min_order_quantity: parseInt(e.target.value),
+                      })
+                    }
+                    error={!!formErrors.min_order_quantity}
+                    errorMsg={formErrors.min_order_quantity}
+                    required={true}
+                    className="rounded-md"
+                  />
+                </div>
+
+                <div className="col-span-2 flex items-center gap-2">
+                  <Checkbox
+                    id="is_available"
+                    name="is_available"
+                    checked={newProduct.is_available}
+                    onChange={(e) =>
+                      setNewProduct({
+                        ...newProduct,
+                        is_available: e.target.checked,
+                      })
+                    }
+                    label="Product is available for purchase"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddProduct}
-              variant="yellow"
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add Product
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => setIsAddDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="yellow"
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Product
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -935,217 +1155,280 @@ const AdminProductsDashboard = () => {
           }
         }}
       >
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
-          {currentProduct && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <EditImageUpload
-                  currentImage={currentProduct.image_url}
-                  onImageChange={(file) => setEditProductImage(file)}
-                />
-                <div className="col-span-2">
-                  <InputAdmin
-                    name="edit-name"
-                    label="Product Name"
-                    value={currentProduct.name}
-                    onChange={(e) =>
-                      setCurrentProduct({
-                        ...currentProduct,
-                        name: e.target.value,
-                      })
-                    }
+          <form onSubmit={handleEditProduct}>
+            {currentProduct && (
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <EditImageUpload
+                    currentImage={currentProduct.image_url}
+                    onImageChange={(file) => setEditProductImage(file)}
+                    error={!!editFormErrors.image_url}
+                    errorMsg={editFormErrors.image_url}
+                    required={true}
                   />
-                </div>
-                <div className="col-span-2">
-                  <TextareaAdmin
-                    name="edit-description"
-                    label="Description"
-                    value={currentProduct.description}
-                    onChange={(e) =>
-                      setCurrentProduct({
-                        ...currentProduct,
-                        description: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <InputAdmin
-                    name="edit-price"
-                    label="Price ($)"
-                    type="number"
-                    value={
-                      currentProduct.price != null
-                        ? currentProduct.price.toString()
-                        : "0"
-                    }
-                    onChange={(e) =>
-                      setCurrentProduct({
-                        ...currentProduct,
-                        price: Number.parseFloat(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <InputAdmin
-                    name="edit-stock"
-                    label="Stock Quantity"
-                    type="number"
-                    value={currentProduct.stock_quantity.toString()}
-                    onChange={(e) =>
-                      setCurrentProduct({
-                        ...currentProduct,
-                        stock_quantity: Number.parseInt(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <Select
-                    name="edit-category"
-                    label="Category"
-                    value={currentProduct.category_id.toString()}
-                    onChange={(e) =>
-                      setCurrentProduct({
-                        ...currentProduct,
-                        category_id: Number.parseInt(e.target.value),
-                      })
-                    }
-                    options={[
-                      { value: "1", label: "Tarts" },
-                      { value: "2", label: "Desserts" },
-                    ]}
-                  />
-                </div>
-                <div>
-                  <InputAdmin
-                    name="edit-size"
-                    label="Size"
-                    value={currentProduct.size}
-                    onChange={(e) =>
-                      setCurrentProduct({
-                        ...currentProduct,
-                        size: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <InputAdmin
-                    name="edit-collection"
-                    label="Collection"
-                    value={currentProduct.collection}
-                    onChange={(e) =>
-                      setCurrentProduct({
-                        ...currentProduct,
-                        collection: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <Select
-                    name="edit-season"
-                    label="Season"
-                    value={currentProduct.season}
-                    onChange={(e) =>
-                      setCurrentProduct({
-                        ...currentProduct,
-                        season: e.target.value,
-                      })
-                    }
-                    options={seasonOptions}
-                  />
-                </div>
-                <div className="col-span-2">
-                  <TextareaAdmin
-                    name="edit-ingredients"
-                    label="Ingredients"
-                    value={currentProduct.ingredients}
-                    onChange={(e) =>
-                      setCurrentProduct({
-                        ...currentProduct,
-                        ingredients: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <InputAdmin
-                    name="edit-allergens"
-                    label="Allergens"
-                    value={currentProduct.allergens}
-                    onChange={(e) =>
-                      setCurrentProduct({
-                        ...currentProduct,
-                        allergens: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <InputAdmin
-                    name="edit-nutritional_info"
-                    label="Nutritional Info"
-                    value={currentProduct.nutritional_info}
-                    onChange={(e) =>
-                      setCurrentProduct({
-                        ...currentProduct,
-                        nutritional_info: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="col-span-2 flex items-center gap-2">
-                  <Checkbox
-                    id="edit-is_available"
-                    name="edit-is_available"
-                    checked={currentProduct.is_available}
-                    onChange={(e) =>
-                      setCurrentProduct({
-                        ...currentProduct,
-                        is_available: e.target.checked,
-                      })
-                    }
-                    label="Product is available for purchase"
-                  />
+                  <div className="col-span-2">
+                    <InputAdmin
+                      name="edit-name"
+                      label="Product Name"
+                      value={currentProduct.name}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          name: e.target.value,
+                        })
+                      }
+                      error={!!editFormErrors.name}
+                      errorMsg={editFormErrors.name}
+                      required={true}
+                      className="rounded-md"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <TextareaAdmin
+                      name="edit-description"
+                      label="Description"
+                      value={currentProduct.description}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          description: e.target.value,
+                        })
+                      }
+                      error={!!editFormErrors.description}
+                      errorMsg={editFormErrors.description}
+                      required={true}
+                    />
+                  </div>
+                  <div>
+                    <InputAdmin
+                      name="edit-price"
+                      label="Price ($)"
+                      type="number"
+                      value={
+                        currentProduct.price != null
+                          ? currentProduct.price.toString()
+                          : "0"
+                      }
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          price: Number.parseFloat(e.target.value),
+                        })
+                      }
+                      error={!!editFormErrors.price}
+                      errorMsg={editFormErrors.price}
+                      required={true}
+                      className="rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <InputAdmin
+                      name="edit-stock"
+                      label="Stock Quantity"
+                      type="number"
+                      value={currentProduct.stock_quantity.toString()}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          stock_quantity: Number.parseInt(e.target.value),
+                        })
+                      }
+                      error={!!editFormErrors.stock_quantity}
+                      errorMsg={editFormErrors.stock_quantity}
+                      required={true}
+                      className="rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <Select
+                      name="edit-category"
+                      label="Category"
+                      value={
+                        currentProduct.category_id
+                          ? currentProduct.category_id.toString()
+                          : ""
+                      }
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          category_id: Number.parseInt(e.target.value),
+                        })
+                      }
+                      options={categoryOptions}
+                      error={!!editFormErrors.category_id}
+                      errorMsg={editFormErrors.category_id}
+                      required={true}
+                    />
+                  </div>
+                  <div>
+                    <InputAdmin
+                      name="edit-size"
+                      label="Size"
+                      value={currentProduct.size}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          size: e.target.value,
+                        })
+                      }
+                      error={!!editFormErrors.size}
+                      errorMsg={editFormErrors.size}
+                      required={false}
+                      className="rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <InputAdmin
+                      name="edit-collection"
+                      label="Collection"
+                      value={currentProduct.collection}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          collection: e.target.value,
+                        })
+                      }
+                      error={!!editFormErrors.collection}
+                      errorMsg={editFormErrors.collection}
+                      required={false}
+                      className="rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <Select
+                      name="edit-seasonal"
+                      label="Seasonal"
+                      value={currentProduct.seasonal}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          seasonal: e.target.value,
+                        })
+                      }
+                      options={seasonalOptions}
+                      error={!!editFormErrors.seasonal}
+                      errorMsg={editFormErrors.seasonal}
+                      required={false}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <TextareaAdmin
+                      name="edit-ingredients"
+                      label="Ingredients"
+                      value={currentProduct.ingredients}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          ingredients: e.target.value,
+                        })
+                      }
+                      error={!!editFormErrors.ingredients}
+                      errorMsg={editFormErrors.ingredients}
+                      required={true}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <TextareaAdmin
+                      name="edit-allergens"
+                      label="Allergens"
+                      value={currentProduct.allergens}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          allergens: e.target.value,
+                        })
+                      }
+                      error={!!editFormErrors.allergens}
+                      errorMsg={editFormErrors.allergens}
+                      required={true}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <TextareaAdmin
+                      name="edit-nutritional_info"
+                      label="Nutritional Info"
+                      value={currentProduct.nutritional_info}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          nutritional_info: e.target.value,
+                        })
+                      }
+                      error={!!editFormErrors.nutritional_info}
+                      errorMsg={editFormErrors.nutritional_info}
+                      required={true}
+                    />
+                  </div>
+                  <div>
+                    <InputAdmin
+                      name="edit-min_order_quantity"
+                      label="Minimum Order Quantity"
+                      type="number"
+                      value={currentProduct.min_order_quantity?.toString()}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          min_order_quantity: parseInt(e.target.value),
+                        })
+                      }
+                      error={!!editFormErrors.min_order_quantity}
+                      errorMsg={editFormErrors.min_order_quantity}
+                      required={true}
+                      className="rounded-md"
+                    />
+                  </div>
+                  <div className="col-span-2 flex items-center gap-2">
+                    <Checkbox
+                      id="edit-is_available"
+                      name="edit-is_available"
+                      checked={currentProduct.is_available}
+                      onChange={(e) =>
+                        setCurrentProduct({
+                          ...currentProduct,
+                          is_available: e.target.checked,
+                        })
+                      }
+                      label="Product is available for purchase"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-          <DialogFooter className="flex justify-between sm:justify-between">
-            <Button
-              variant="destructive"
-              onClick={() => {
-                setIsEditDialogOpen(false);
-                setIsDeleteDialogOpen(true);
-              }}
-              className="flex items-center gap-2"
-            >
-              <Trash className="h-4 w-4" />
-              Delete
-            </Button>
-            <div className="flex gap-2">
+            )}
+            <DialogFooter className="flex justify-between sm:justify-between">
               <Button
-                variant="outline"
-                onClick={() => setIsEditDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleEditProduct}
-                variant="yellow"
+                variant="destructive"
+                onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setIsDeleteDialogOpen(true);
+                }}
                 className="flex items-center gap-2"
               >
-                <Check className="h-4 w-4" />
-                Save Changes
+                <Trash className="h-4 w-4" />
+                Delete
               </Button>
-            </div>
-          </DialogFooter>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="yellow"
+                  className="flex items-center gap-2"
+                >
+                  <Check className="h-4 w-4" />
+                  Save Changes
+                </Button>
+              </div>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 

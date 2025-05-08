@@ -60,7 +60,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           </div>
         )}
         <div
-          className={`focus-within:border-yellow-600 border-2 ${
+          className={`focus-within:border-yellow-600 border-2 rounded-md ${
             hasError
               ? "border-gray-300 bg-red-100"
               : "border-gray-50 bg-gray-50"
