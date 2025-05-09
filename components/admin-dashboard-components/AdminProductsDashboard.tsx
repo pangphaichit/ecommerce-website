@@ -357,24 +357,6 @@ const AdminProductsDashboard = () => {
       }
     }
 
-    // Slug generation and validation
-    if (product.name) {
-      const slug = product.name
-        .trim()
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, "") // Remove special chars except spaces and hyphens
-        .replace(/\s+/g, "-") // Replace spaces with hyphens
-        .replace(/-+/g, "-"); // Replace multiple hyphens with single hyphen
-
-      if (slug.length > 100) {
-        errors.slug =
-          "Product name too long - generates slug exceeding 100 characters";
-      } else if (slug.length === 0) {
-        errors.slug =
-          "Product name must contain at least one alphanumeric character";
-      }
-    }
-
     return errors;
   };
 
@@ -405,7 +387,6 @@ const AdminProductsDashboard = () => {
     }
 
     const productId = `p${(products.length + 1).toString().padStart(3, "0")}`;
-    const slug = newProduct.name?.toLowerCase().replace(/\s+/g, "-") || "";
 
     // Create a URL for the new image if available
     let imageUrl = newProduct.image_url || "";
@@ -416,7 +397,6 @@ const AdminProductsDashboard = () => {
     const productToAdd: Product = {
       ...(newProduct as Product),
       product_id: productId,
-      slug: slug,
       image_url: imageUrl,
     };
 
@@ -1087,7 +1067,7 @@ const AdminProductsDashboard = () => {
                   />
                 </div>
 
-                <div>
+                <div className="col-span-2">
                   <InputAdmin
                     name="min_order_quantity"
                     label="Minimum Order Quantity"
@@ -1363,7 +1343,7 @@ const AdminProductsDashboard = () => {
                       required={true}
                     />
                   </div>
-                  <div>
+                  <div className="col-span-2">
                     <InputAdmin
                       name="edit-min_order_quantity"
                       label="Minimum Order Quantity"
