@@ -75,10 +75,13 @@ export default async function handler(
           products.description ILIKE $${filterParams.length + 3} OR
           products.ingredients ILIKE $${filterParams.length + 4} OR
           products.collection ILIKE $${filterParams.length + 5} OR
-          categories.name ILIKE $${filterParams.length + 6}
+          categories.name ILIKE $${filterParams.length + 6} OR
+          products.seasonal::text ILIKE $${filterParams.length + 7}
+
         )
       `;
       filterParams.push(
+        searchTerm,
         searchTerm,
         searchTerm,
         searchTerm,
@@ -135,7 +138,7 @@ export default async function handler(
     const pageNum = isNaN(parseInt(page)) ? 1 : Math.max(1, parseInt(page));
     const limitNum = isNaN(parseInt(limit))
       ? 10
-      : Math.min(20, Math.max(1, parseInt(limit)));
+      : Math.min(10, Math.max(1, parseInt(limit)));
     const offset = (pageNum - 1) * limitNum;
 
     const queryParams = [...filterParams];
@@ -161,7 +164,7 @@ export default async function handler(
 
     return res.status(200).json({
       message: "Products fetched successfully",
-      data: productsResult.rows,
+      product: productsResult.rows,
       pagination: {
         total: totalProducts,
         page: pageNum,

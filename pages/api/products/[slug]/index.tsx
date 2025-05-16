@@ -28,20 +28,20 @@ export default async function handler(
     if (req.method === "GET") {
       try {
         const query = `
-  SELECT products.*, categories.name AS category_name
-  FROM products
-  LEFT JOIN categories ON categories.category_id = products.category_id
-  WHERE products.slug = $1
-`;
-        const result = await connectionPool.query(query, [slug]);
+      SELECT products.*, categories.name AS category_name
+      FROM products
+      LEFT JOIN categories ON categories.category_id = products.category_id
+      WHERE products.slug = $1
+    `;
+        const result = await client.query(query, [slug]);
 
         if (result.rows.length === 0) {
-          return res.status(404).json({ error: "user not found" });
+          return res.status(404).json({ error: "product not found" });
         }
 
         return res.status(200).json({ data: result.rows[0] });
       } catch (error) {
-        console.error("error fetching user data:", error);
+        console.error("error fetching product data:", error);
         return res.status(500).json({ error: "internal server error" });
       }
     }
