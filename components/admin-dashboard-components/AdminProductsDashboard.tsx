@@ -25,6 +25,8 @@ import Select from "@/components/ui/Select";
 import TextareaAdmin from "@/components/ui/TextareaAdmin";
 import SkeletonAdmin from "@/components/ui/SkeletonAdmin";
 import EditImageUpload from "./EditImageUpload";
+import CustomAlert from "@/components/ui/CustomAlert";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 interface Product {
   product_id: string;
@@ -69,6 +71,7 @@ const AdminProductsDashboard = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [submittedSearch, setSubmittedSearch] = useState("");
@@ -110,8 +113,19 @@ const AdminProductsDashboard = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // State for managing the custom alert
+  const [alertOpen, setAlertOpen] = useState<boolean>(false);
+  const [alertMessage, setAlertMessage] = useState<string>("");
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+
   const { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } =
     DialogComponents;
+
+  const getCacheBustedImageUrl = (url: string) => {
+    if (!url) return "";
+    const separator = url.includes("?") ? "&" : "?";
+    return `${url}${separator}t=${Date.now()}`;
+  };
 
   // Function to fetch products
   const fetchProducts = async () => {
@@ -407,32 +421,39 @@ const AdminProductsDashboard = () => {
     try {
       setLoading(true);
 
-      // Create form data to handle image upload
-      const formData = new FormData();
-
-      // Add all product fields to formData
-      Object.entries(newProduct).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-          formData.append(key, String(value));
-        }
-      });
-
-      // Add image if present
+      const imageForm = new FormData();
       if (newProductImage) {
-        formData.append("image", newProductImage);
+        imageForm.append("file", newProductImage);
       }
 
-      // Send request to create product
-      const response = await axios.post("/api/admin/products", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      const uploadResponse = await axios.post(
+        "/api/admin/products/image",
+        imageForm,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          withCredentials: true,
+        }
+      );
+
+      const uploadedUrls = uploadResponse.data?.urls;
+      if (!uploadedUrls || uploadedUrls.length === 0) {
+        throw new Error("Image upload failed or returned no URL");
+      }
+
+      const imageUrl = uploadedUrls[0];
+
+      const productResponse = await axios.post("/api/admin/products", {
+        ...newProduct,
+        image_url: imageUrl,
       });
 
-      // If successful, refresh products list
-      if (response.status === 201) {
+      if (productResponse.status === 201) {
+        setAlertType("success");
+        setAlertMessage("Product added successfully!");
+        setAlertOpen(true);
         setIsAddDialogOpen(false);
-        // Reset form
         setNewProduct({
           name: "",
           description: "",
@@ -451,15 +472,59 @@ const AdminProductsDashboard = () => {
         });
         setNewProductImage(null);
         setFormErrors({});
-
-        // Refresh products list
         fetchProducts();
       }
     } catch (err) {
-      if (err instanceof Error) {
+      if (axios.isAxiosError(err)) {
+        console.log(err.response?.data?.error);
+        const serverError = err.response?.data?.error || "";
+
+        // Check for specific error messages and map them to form fields
+        if (
+          err.response?.data?.error?.includes("Product name already exists") ||
+          err.response?.data?.error?.includes("name already exists")
+        ) {
+          setFormErrors((prev) => ({
+            ...prev,
+            name: err.response?.data?.error ?? "An unknown error occurred",
+          }));
+          return;
+          // Don't show the alert for this specific error
+        } else if (typeof err.response?.data?.errors === "object") {
+          // Iterate over the keys in the errors object
+          Object.keys(err.response?.data?.errors).forEach((key) => {
+            // Set the form error for the current key
+            setFormErrors((prev) => ({
+              ...prev,
+              [key]: err.response?.data?.errors[key].join(", "), // Join multiple errors if needed
+            }));
+          });
+          // Show alert for other errors
+          setAlertType("error");
+          setAlertMessage(
+            serverError || "An error occurred while adding the product."
+          );
+          setAlertOpen(true);
+        } else {
+          // Show alert for other errors
+          setAlertType("error");
+          setAlertMessage(
+            serverError || "An error occurred while adding the product."
+          );
+          setAlertOpen(true);
+        }
+
+        setError(serverError || "An error occurred while adding the product.");
+      } else if (err instanceof Error) {
+        setAlertType("error");
+        setAlertMessage(err.message);
         setError(err.message);
+        setAlertOpen(true);
       } else {
+        setAlertType("error");
+        setAlertMessage("An error occurred while adding the product.");
         setError("An error occurred while adding the product.");
+        setAlertOpen(true);
       }
     } finally {
       setLoading(false);
@@ -479,47 +544,116 @@ const AdminProductsDashboard = () => {
     try {
       setLoading(true);
 
-      // Create form data for the update
-      const formData = new FormData();
+      let imageUrl = currentProduct.image_url;
 
-      // Add all product fields to formData
-      Object.entries(currentProduct).forEach(([key, value]) => {
-        if (value !== null && value !== undefined && key !== "image_file") {
-          formData.append(key, String(value));
-        }
-      });
-
-      // Add new image if present
       if (editProductImage) {
-        formData.append("image", editProductImage);
+        const imageForm = new FormData();
+        imageForm.append("file", editProductImage);
+
+        const uploadResponse = await axios.post(
+          "/api/admin/products/image",
+          imageForm,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true,
+          }
+        );
+
+        const uploadedUrls = uploadResponse.data?.urls;
+        if (!uploadedUrls || uploadedUrls.length === 0) {
+          throw new Error("Image upload failed or returned no URL");
+        }
+
+        imageUrl = uploadedUrls[0];
       }
 
-      // Send update request
+      // Prepare updated product data
+      const updatedProduct = {
+        ...currentProduct,
+        image_url: imageUrl,
+        is_available: currentProduct.is_available ? "true" : "false",
+      };
+
+      console.log(
+        "Sending updated product with image:",
+        updatedProduct.image_url
+      );
+
       const response = await axios.put(
         `/api/admin/products/${currentProduct.product_id}`,
-        formData,
+        updatedProduct,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
         }
       );
 
-      // If successful, close dialog and refresh products
       if (response.status === 200) {
+        setAlertType("success");
+        setAlertMessage("Product updated successfully!");
+        setAlertOpen(true);
+
         setIsEditDialogOpen(false);
         setCurrentProduct(null);
         setEditProductImage(null);
         setEditFormErrors({});
-
-        // Refresh products list
         fetchProducts();
       }
     } catch (err) {
-      if (err instanceof Error) {
+      if (axios.isAxiosError(err)) {
+        console.log(err.response?.data?.error);
+        const serverError = err.response?.data?.error || "";
+
+        // Specific slug error handling
+        if (serverError.includes("A product with this name already exists")) {
+          setEditFormErrors((prev) => ({
+            ...prev,
+            name: "A product with this name already exists.",
+          }));
+          return;
+        }
+
+        // Field-level errors
+        if (typeof err.response?.data?.errors === "object") {
+          const fieldErrors = err.response.data.errors;
+          Object.keys(fieldErrors).forEach((key) => {
+            const messages = fieldErrors[key];
+            setEditFormErrors((prev) => ({
+              ...prev,
+              [key]: Array.isArray(messages)
+                ? messages.join(", ")
+                : String(messages || "Unknown error"),
+            }));
+          });
+
+          // Show alert for other errors
+          setAlertType("error");
+          setAlertMessage(
+            serverError || "An error occurred while updating the product."
+          );
+          setAlertOpen(true);
+        } else {
+          // Show alert for other errors
+          setAlertType("error");
+          setAlertMessage(
+            serverError || "An error occurred while updating the product."
+          );
+          setAlertOpen(true);
+        }
+
+        setError(
+          serverError || "An error occurred while updating the product."
+        );
+      } else if (err instanceof Error) {
+        setAlertType("error");
+        setAlertMessage(err.message);
         setError(err.message);
+        setAlertOpen(true);
       } else {
+        setAlertType("error");
+        setAlertMessage("An error occurred while updating the product.");
         setError("An error occurred while updating the product.");
+        setAlertOpen(true);
       }
     } finally {
       setLoading(false);
@@ -555,13 +689,20 @@ const AdminProductsDashboard = () => {
 
         // Refresh products list
         fetchProducts();
+        setAlertType("success");
+        setAlertMessage("Product deleted successfully.");
+        setAlertOpen(true);
       }
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("An error occurred while deleting the product.");
-      }
+      const message =
+        err instanceof Error
+          ? err.message
+          : "An error occurred while deleting the product.";
+      setError(message);
+
+      setAlertType("error");
+      setAlertMessage(message);
+      setAlertOpen(true);
     } finally {
       setLoading(false);
     }
@@ -575,8 +716,18 @@ const AdminProductsDashboard = () => {
       setLoading(true);
 
       // Send bulk delete request
-      const response = await axios.delete("/api/admin/products/bulk", {
-        data: { productIds: selectedProducts },
+      const formattedProductIds = selectedProducts
+        .map((id) => String(id))
+        .filter((id) => id.length > 0);
+
+      if (formattedProductIds.length === 0) {
+        setError("No valid product IDs selected for deletion.");
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.post("/api/admin/products/bulk-delete", {
+        productIds: formattedProductIds,
       });
 
       // If successful, reset selection and refresh products
@@ -586,13 +737,20 @@ const AdminProductsDashboard = () => {
 
         // Refresh products list
         fetchProducts();
+        setAlertType("success");
+        setAlertMessage("Selected products deleted successfully.");
+        setAlertOpen(true);
       }
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("An error occurred while deleting the products.");
-      }
+      const message =
+        err instanceof Error
+          ? err.message
+          : "An error occurred while deleting the products.";
+      setError(message);
+
+      setAlertType("error");
+      setAlertMessage(message);
+      setAlertOpen(true);
     } finally {
       setLoading(false);
     }
@@ -733,7 +891,7 @@ const AdminProductsDashboard = () => {
             {isSelectionMode && selectedProducts.length > 0 && (
               <Button
                 variant="destructive"
-                onClick={handleBulkDelete}
+                onClick={() => setIsBulkDeleteDialogOpen(true)}
                 className="flex items-center gap-2"
               >
                 <Trash className="h-4 w-4" />
@@ -929,7 +1087,7 @@ const AdminProductsDashboard = () => {
                           )}
                           {product.image_url ? (
                             <img
-                              src={product.image_url}
+                              src={`${product.image_url}?t=${Date.now()}`}
                               alt={product.name}
                               className={`relative h-full w-full object-cover ${
                                 !product.is_available
@@ -1045,6 +1203,9 @@ const AdminProductsDashboard = () => {
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <EditImageUpload
+                    currentImage={getCacheBustedImageUrl(
+                      currentProduct?.image_url ?? ""
+                    )}
                     onImageChange={(file) => setNewProductImage(file)}
                     error={!!formErrors.image_url}
                     errorMsg={formErrors.image_url}
@@ -1296,9 +1457,19 @@ const AdminProductsDashboard = () => {
                   type="submit"
                   variant="yellow"
                   className="flex items-center gap-2"
+                  disabled={loading}
                 >
-                  <Plus className="h-4 w-4" />
-                  Add Product
+                  {loading ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Adding Product...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4" />
+                      Add Product
+                    </>
+                  )}
                 </Button>
               </DialogFooter>
             </form>
@@ -1583,9 +1754,19 @@ const AdminProductsDashboard = () => {
                     type="submit"
                     variant="yellow"
                     className="flex items-center gap-2"
+                    disabled={loading} // optionally disable during loading
                   >
-                    <Check className="h-4 w-4" />
-                    Save Changes
+                    {loading ? (
+                      <>
+                        <LoadingSpinner size="sm" className="mr-2" />
+                        Saving Changes...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4" />
+                        Save Changes
+                      </>
+                    )}
                   </Button>
                 </div>
               </DialogFooter>
@@ -1593,6 +1774,63 @@ const AdminProductsDashboard = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Bulk Delete Confirmation Dialog */}
+        <Dialog
+          open={isBulkDeleteDialogOpen}
+          onOpenChange={setIsBulkDeleteDialogOpen}
+        >
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Confirm Bulk Deletion</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p>
+                Are you sure you want to delete the selected products? This
+                action cannot be undone.
+              </p>
+              <div className="mt-4 p-4 bg-gray-50 rounded-md max-h-[150px] overflow-y-auto">
+                <ul className="list-disc pl-5 text-sm text-gray-600">
+                  {products
+                    .filter((product) =>
+                      selectedProducts.includes(product.product_id)
+                    )
+                    .map((product) => (
+                      <li key={product.product_id}>{product.name}</li>
+                    ))}
+                </ul>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsBulkDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  await handleBulkDelete();
+                  setIsBulkDeleteDialogOpen(false);
+                }}
+                className="flex items-center gap-2"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <LoadingSpinner size="sm" className="mr-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash className="h-4 w-4" />
+                    Delete Selected
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         {/* Delete Confirmation Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
@@ -1624,15 +1862,31 @@ const AdminProductsDashboard = () => {
                 variant="destructive"
                 onClick={handleDeleteProduct}
                 className="flex items-center gap-2"
+                disabled={loading}
               >
-                <Trash className="h-4 w-4" />
-                Delete Product
+                {loading ? (
+                  <>
+                    <LoadingSpinner size="sm" className="mr-2" />
+                    Deleting Product...
+                  </>
+                ) : (
+                  <>
+                    <Trash className="h-4 w-4" />
+                    Delete Product
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
-      {/* )} */}
+      <CustomAlert
+        open={alertOpen}
+        message={alertMessage}
+        type={alertType}
+        onClose={() => setAlertOpen(false)}
+        aria-live="assertive"
+      />
     </div>
   );
 };
