@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import NotificationBar from "../landing-page-components/NotificationBar";
-import Navbar from "../Navbar";
-import { useAuth } from "../../context/authentication";
+import NotificationBar from "@/components/landing-page-components/NotificationBar";
+import Navbar from "@/components/Navbar";
+import { useAuth } from "@/context/authentication";
 
 const MyAccountPage = () => {
   const { userRole, logout, userId } = useAuth();

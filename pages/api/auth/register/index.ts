@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import connectionPool from "@/utils/db";
 import supabase from "@/utils/supabase";
-import { RegistrationRequestBody } from "../../../../types/auth/";
+import { RegistrationRequestBody } from "@/types/auth/";
 
 export default async function handler(
   req: NextApiRequest,

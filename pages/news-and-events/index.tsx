@@ -1,10 +1,10 @@
 import React from "react";
-import NewsAndEventsPagePage from "../../components/pages/NewsAndEventsPage";
+import NewsAndEventsPage from "@/components/pages/NewsAndEventsPage";
 
 const NewsAndEvents: React.FC = () => {
   return (
     <>
-      <NewsAndEventsPagePage />
+      <NewsAndEventsPage />
     </>
   );
 };

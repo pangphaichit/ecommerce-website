@@ -1,6 +1,6 @@
 import React from "react";
-import NotificationBar from "../landing-page-components/NotificationBar";
-import Navbar from "../Navbar";
+import NotificationBar from "@/components/landing-page-components/NotificationBar";
+import Navbar from "@/components/Navbar";
 
 const BlogPage = () => {
   return (

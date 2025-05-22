@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import supabase from "@/utils/supabase";
 import connectionPool from "@/utils/db";
-import type { LoginRequestBody } from "../../../../types/auth";
+import type { LoginRequestBody } from "@/types/auth";
 import { jwtDecode } from "jwt-decode";
 
 export default async function handler(

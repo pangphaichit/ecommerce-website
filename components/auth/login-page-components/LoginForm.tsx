@@ -6,19 +6,19 @@ import {
   useEffect,
 } from "react";
 import axios from "axios";
-import { useAuth } from "../../../context/authentication";
+import { useAuth } from "@/context/authentication";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, House, Eye, EyeOff } from "lucide-react";
-import Input from "../../ui/Input";
-import CustomAlert from "../../ui/CustomAlert";
-import LoadingSpinner from "../../ui/LoadingSpinner";
-import CustomHelpTooltip from "../../ui/CustomHelpTooltip";
+import Input from "@/components/ui/Input";
+import CustomAlert from "@/components/ui/CustomAlert";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import CustomHelpTooltip from "@/components/ui/CustomHelpTooltip";
 import {
   LoginFormData,
   LoginErrorState,
   LoginTouchedState,
-} from "../../../types/auth/";
+} from "@/types/auth/";
 
 const LoginForm = () => {
   const { login } = useAuth();
