@@ -28,6 +28,7 @@
     "clsx": "^2.1.1",
     "cookie": "^1.0.2",
     "dotenv": "^16.4.7",
+    "formidable": "^3.5.4",
     "google": "^2.1.0",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
@@ -42,6 +43,7 @@
     "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
+    "@types/formidable": "^3.4.5",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20",
