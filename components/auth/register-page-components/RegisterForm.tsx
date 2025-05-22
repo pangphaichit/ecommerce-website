@@ -6,7 +6,7 @@ import React, {
   useRef,
 } from "react";
 import axios from "axios";
-import { useAuth } from "../../../context/authentication";
+import { useAuth } from "@/context/authentication";
 import Link from "next/link";
 import Image from "next/image";
 import zxcvbn from "zxcvbn";
@@ -18,15 +18,15 @@ import {
   Circle,
   CircleCheck,
 } from "lucide-react";
-import Input from "../../ui/Input";
-import CustomAlert from "../../ui/CustomAlert";
-import LoadingSpinner from "../../ui/LoadingSpinner";
+import Input from "@/components/ui/Input";
+import CustomAlert from "@/components/ui/CustomAlert";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {
   FormData,
   ErrorState,
   ValidationChecks,
   TouchedState,
-} from "../../../types/auth/";
+} from "@/types/auth/";
 
 const RegisterForm = () => {
   const { register } = useAuth();
