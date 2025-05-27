@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import { useAuth } from "@/context/authentication";
+import { useRouter } from "next/router";
 import { Menu, X, Search, Heart, User, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,6 +20,40 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [activeItem, setActiveItem] = useState<string>("");
   const pathname = usePathname();
+  const { isAuthenticated, logout, userRole, userId } = useAuth();
+  const [showPopup, setShowPopup] = useState(false);
+  const router = useRouter();
+  const userRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [userImage, setUserImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(`/api/customer/${userId}`);
+        setUserName(res.data.data?.first_name || "Guest");
+        setUserImage(res.data.data?.image || null);
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          setError(err.response?.data?.message || "Failed to fetch user data");
+        } else if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unknown error occurred");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userId) {
+      fetchUserData();
+    }
+  }, [userId]);
 
   useEffect(() => {
     const currentRoute = routes.find((route) => route.path === pathname);
@@ -29,6 +66,46 @@ const Navbar = () => {
     setActiveItem(itemName);
     setIsOpen(false);
   };
+
+  const handleLoginClick = () => {
+    router.push("/log-in");
+    setShowPopup(false);
+  };
+
+  const handleRegisterClick = () => {
+    router.push("/register");
+    setShowPopup(false);
+  };
+
+  const handleLogoutClick = () => {
+    logout();
+    setShowPopup(false);
+  };
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setShowPopup(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setShowPopup(false);
+    }, 300);
+  };
+
+  const handleUserClick = () => {
+    setShowPopup((prev) => !prev);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <nav className="bg-white w-full relative">
@@ -69,10 +146,93 @@ const Navbar = () => {
             />
           </div>
           <div className="flex items-center lg:gap-2 pr-3 lg:pr-0">
-            <User
-              size={24}
-              className="text-gray-800 hover:text-yellow-600 cursor-pointer hidden lg:block"
-            />
+            <div
+              className="relative hidden lg:block"
+              ref={userRef}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
+              <div onClick={handleUserClick} className="cursor-pointer">
+                <User
+                  size={24}
+                  className="text-gray-800 hover:text-yellow-600 cursor-pointer hidden lg:block"
+                />
+              </div>
+              {showPopup && (
+                <div
+                  className="absolute top-full right-0 bg-white shadow-lg border border-gray-200 z-50 w-[250px] py-4"
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  {isAuthenticated ? (
+                    <div className="w-full">
+                      <Link
+                        href={`/customer/my-account`}
+                        className="shrink-0 group"
+                      >
+                        <div className="flex items-center gap-3 px-4 pb-3">
+                          {userImage ? (
+                            <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center group-hover:ring-2 group-hover:ring-yellow-400 group-hover:ring-offset-2 transition-all duration-200">
+                              <Image
+                                src={userImage}
+                                alt="User Profile"
+                                width={48}
+                                height={48}
+                                className="rounded-full object-cover border-2 border-gray-200"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center group-hover:ring-2 group-hover:ring-yellow-400 group-hover:ring-offset-1 transition-all duration-200">
+                              <User className="text-yellow-600" size={20} />
+                            </div>
+                          )}
+
+                          <div className="flex-1">
+                            <span className="text-sm font-semibold text-gray-800 block group-hover:text-yellow-600 transition-colors duration-200">
+                              {userName}
+                            </span>
+                            <span className="text-xs text-gray-500 group-hover:text-gray-600 transition-colors duration-200">
+                              Welcome back!
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                      <hr className="border-gray-100" />
+                      <button
+                        onClick={handleLogoutClick}
+                        className="block w-full text-left px-4 py-2 text-sm font-medium hover:font-semibold hover:bg-yellow-50 text-gray-700 cursor-pointer hover:text-yellow-600 transition-all duration-200 rounded-md"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-full">
+                      <div className="px-4 pb-3">
+                        <h3 className="text-sm font-semibold text-gray-800 mb-1">
+                          Welcome to Oven and Wheat
+                        </h3>
+                        <p className="text-xs text-gray-500">
+                          Sign in to access your account
+                        </p>
+                      </div>
+                      <hr className="border-gray-100" />
+                      <button
+                        onClick={handleLoginClick}
+                        className="block w-full text-left px-4 py-2 text-sm font-medium hover:font-semibold hover:bg-yellow-50 text-gray-700 cursor-pointer hover:text-yellow-600 transition-all duration-200 rounded-md"
+                      >
+                        Login
+                      </button>
+                      <button
+                        onClick={handleRegisterClick}
+                        className="block w-full text-left px-4 py-2 text-sm font-medium hover:font-semibold hover:bg-yellow-50 text-gray-700 cursor-pointer hover:text-yellow-600 transition-all duration-200 rounded-md"
+                      >
+                        Register
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             <ShoppingCart
               size={24}
               className="text-gray-800 hover:text-yellow-600 cursor-pointer"
