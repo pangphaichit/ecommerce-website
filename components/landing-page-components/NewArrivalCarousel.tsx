@@ -53,21 +53,26 @@ export default function NewArrivalCarousel({
     return () => window.removeEventListener("resize", updateItemsPerPage);
   }, []);
 
-  // Calculate max index based on items per page
-  const maxIndex = Math.max(products.length - itemsPerPage, 0);
+  const latestProducts = products.slice(-8);
+
+  const total = latestProducts.length;
+
+  const totalPages = Math.ceil(total / itemsPerPage);
 
   const handleNext = () => {
-    setCurrentIndex((prev) => Math.min(prev + itemsPerPage, maxIndex));
+    setCurrentIndex((prev) => (prev + itemsPerPage) % total);
   };
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => Math.max(prev - itemsPerPage, 0));
+    setCurrentIndex((prev) => (prev - itemsPerPage + total) % total);
   };
 
-  const visibleProducts = products.slice(
-    currentIndex,
-    currentIndex + itemsPerPage
-  );
+  const visibleProducts = [];
+
+  for (let i = 0; i < itemsPerPage; i++) {
+    const index = (currentIndex + i) % total;
+    visibleProducts.push(latestProducts[index]);
+  }
 
   const handleProductClick = (slug: string) => {
     router.push(`/products/${slug}`);
@@ -80,12 +85,10 @@ export default function NewArrivalCarousel({
       <div className="relative">
         <button
           onClick={handlePrev}
-          disabled={currentIndex === 0}
           className={`
             absolute top-25 left-4 transform -translate-y-1/2 
             bg-white p-2 rounded-full shadow-md
             hover:bg-gray-200 transition-transform duration-300
-            disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed
             z-30
           `}
           aria-label="Previous"
@@ -95,12 +98,10 @@ export default function NewArrivalCarousel({
 
         <button
           onClick={handleNext}
-          disabled={currentIndex >= maxIndex}
           className={`
             absolute top-25 right-4 transform -translate-y-1/2 
             bg-white p-2 rounded-full shadow-md
             hover:bg-gray-200 transition-transform duration-300
-            disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed
             z-30
           `}
           aria-label="Next"
@@ -203,11 +204,10 @@ export default function NewArrivalCarousel({
 
         {/* Pagination Dots */}
         <div className="flex justify-center mt-6 space-x-2">
-          {Array.from({
-            length: Math.ceil(products.length / itemsPerPage),
-          }).map((_, pageIndex) => {
+          {Array.from({ length: totalPages }).map((_, pageIndex) => {
             const pageStartIndex = pageIndex * itemsPerPage;
-            const isActive = currentIndex === pageStartIndex;
+            const isActive =
+              Math.floor(currentIndex / itemsPerPage) === pageIndex;
 
             return (
               <button
