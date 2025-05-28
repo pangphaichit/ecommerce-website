@@ -90,7 +90,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
       setState({ user: null, error: null, loading: false });
 
-      router.push("/");
+      router.push("/log-in");
     } catch (err) {
       console.error("Logout failed:", err);
     }
