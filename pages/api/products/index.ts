@@ -7,6 +7,7 @@ type ProductQueryParams = {
   name?: string;
   description?: string;
   category_id?: string;
+  category_slug: string;
   ingredients?: string;
   collection?: string;
   seasonal?: string;
@@ -39,6 +40,7 @@ export default async function handler(
     const {
       search,
       category_id,
+      category_slug,
       ingredients,
       collection,
       seasonal,
@@ -92,8 +94,11 @@ export default async function handler(
     }
 
     // Optional specific filters
-    if (category_id) addFilter("products.category_id =", category_id);
-
+    if (category_id) {
+      addFilter("products.category_id =", category_id);
+    } else if (category_slug) {
+      addFilter("categories.category_slug =", category_slug);
+    }
     // Handling multiple ingredients with checkboxes
     let ingredientList: string[] = [];
     if (ingredients) {
