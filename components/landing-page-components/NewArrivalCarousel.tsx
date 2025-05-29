@@ -79,14 +79,12 @@ export default function NewArrivalCarousel({
   };
 
   return (
-    <div className="relative w-full max-w-[95%] mx-auto my-8">
-      <h2 className="text-xl font-bold mb-4 ">New Arrivals</h2>
-
+    <div className="relative w-full max-w-[93%] lg:max-w-[95%] mx-auto">
       <div className="relative">
         <button
           onClick={handlePrev}
           className={`
-            absolute top-25 left-4 transform -translate-y-1/2 
+            absolute cursor-pointer top-25 left-4 transform -translate-y-1/2 
             bg-white p-2 rounded-full shadow-md
             hover:bg-gray-200 transition-transform duration-300
             z-30
@@ -144,7 +142,7 @@ export default function NewArrivalCarousel({
               </div>
 
               <div className="p-4 relative">
-                <h3 className="font-medium text-sm text-gray-800">
+                <h3 className="font-bold text-base text-yellow-600">
                   {product.name.length > 30
                     ? product.name.slice(0, 30) + "..."
                     : product.name}
@@ -152,12 +150,12 @@ export default function NewArrivalCarousel({
 
                 <div className="mt-0 lg:mt-4 relative h-10">
                   <p
-                    className={`mt-3 text-xs text-gray-600 transition-opacity duration-300 ${
+                    className={`mt-3 text-sm text-gray-600 transition-opacity duration-300 ${
                       itemsPerPage === 1 ? "" : "group-hover:opacity-0"
                     }`}
                   >
-                    {product.description.length > 90
-                      ? product.description.slice(0, 90) + "..."
+                    {product.description.length > 75
+                      ? product.description.slice(0, 75) + "..."
                       : product.description}
                   </p>
 
@@ -194,7 +192,7 @@ export default function NewArrivalCarousel({
                   </div>
                 )}
 
-                <span className="text-sm font-semibold absolute top-4 right-4">
+                <span className="text-sm font-semibold absolute top-4 right-4 text-green-600">
                   ${Number(product.price).toFixed(2)}
                 </span>
               </div>
