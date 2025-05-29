@@ -274,6 +274,7 @@ const Navbar = () => {
           ))}
         </ul>
       </nav>
+
       {/* Mobile Menu */}
       {isOpen && (
         <div className="lg:hidden fixed top-28 left-0 right-0 bottom-0 bg-white z-40 text-lg overflow-y-auto">
@@ -329,18 +330,18 @@ const Navbar = () => {
               </div>
               <div className="flex flex-row justify-between m-4 gap-4">
                 <Button
-                  variant="lightyellow"
+                  variant="yellow"
                   size="default"
                   onClick={handleLoginClick}
-                  className="block w-full px-4 py-2 text-sm font-medium hover:font-semibold"
+                  className="block w-full px-4 py-2 text-base font-medium hover:font-semibold rounded-none"
                 >
                   Login
                 </Button>
                 <Button
-                  variant="yellow"
+                  variant="lightyellow"
                   size="default"
                   onClick={handleRegisterClick}
-                  className="block w-full px-4 py-2 text-sm font-medium hover:font-semibold"
+                  className="block w-full px-4 py-2 text-base font-medium hover:font-semibold rounded-none"
                 >
                   Register
                 </Button>
