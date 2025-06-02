@@ -38,7 +38,7 @@ export default async function handler(
 
     // Otherwise, fetch all categories
     else {
-      const query = "SELECT * FROM categories";
+      const query = "SELECT * FROM categories ORDER BY name ASC";
       const { rows } = await client.query(query);
 
       return res.status(200).json({
