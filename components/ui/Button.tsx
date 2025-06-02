@@ -19,6 +19,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         // Custom variants for your dashboard
         yellow: "bg-yellow-600 text-white hover:bg-yellow-700",
+        lightyellow: "bg-yellow-50 text-yellow-600 hover:bg-yellow-700",
         success: "bg-green-600 text-white hover:bg-green-700",
         warning: "bg-amber-500 text-white hover:bg-amber-600",
       },

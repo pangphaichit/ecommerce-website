@@ -21,9 +21,7 @@ export default function SkeletonNewArrival() {
   }, []);
 
   return (
-    <div className="relative w-full max-w-[95%] mx-auto my-8">
-      <h2 className="text-xl font-bold mb-4">New Arrivals</h2>
-
+    <div className="relative w-full max-w-[93%] lg:max-w-[95%] mx-auto my-8">
       <div className="relative">
         {/* Grid layout adapts for mobile and desktop */}
         <div

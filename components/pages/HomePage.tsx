@@ -3,6 +3,7 @@ import NotificationBar from "@/components/landing-page-components/NotificationBa
 import Navbar from "@/components/Navbar";
 import ImageSlider from "@/components/landing-page-components/ImageSlider";
 import NewArrivalSection from "@/components/landing-page-components/NewArrivalSection";
+import CategoriesSection from "@/components/landing-page-components/CategoriesSection";
 
 const HomePage: React.FC = () => {
   return (
@@ -11,6 +12,7 @@ const HomePage: React.FC = () => {
       <Navbar />
       <ImageSlider />
       <NewArrivalSection />
+      <CategoriesSection />
     </div>
   );
 };

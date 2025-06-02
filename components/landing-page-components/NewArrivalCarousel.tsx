@@ -53,39 +53,40 @@ export default function NewArrivalCarousel({
     return () => window.removeEventListener("resize", updateItemsPerPage);
   }, []);
 
-  // Calculate max index based on items per page
-  const maxIndex = Math.max(products.length - itemsPerPage, 0);
+  const latestProducts = products.slice(-8);
+
+  const total = latestProducts.length;
+
+  const totalPages = Math.ceil(total / itemsPerPage);
 
   const handleNext = () => {
-    setCurrentIndex((prev) => Math.min(prev + itemsPerPage, maxIndex));
+    setCurrentIndex((prev) => (prev + itemsPerPage) % total);
   };
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => Math.max(prev - itemsPerPage, 0));
+    setCurrentIndex((prev) => (prev - itemsPerPage + total) % total);
   };
 
-  const visibleProducts = products.slice(
-    currentIndex,
-    currentIndex + itemsPerPage
-  );
+  const visibleProducts = [];
+
+  for (let i = 0; i < itemsPerPage; i++) {
+    const index = (currentIndex + i) % total;
+    visibleProducts.push(latestProducts[index]);
+  }
 
   const handleProductClick = (slug: string) => {
     router.push(`/products/${slug}`);
   };
 
   return (
-    <div className="relative w-full max-w-[95%] mx-auto my-8">
-      <h2 className="text-xl font-bold mb-4 ">New Arrivals</h2>
-
+    <div className="relative w-full max-w-[93%] lg:max-w-[95%] mx-auto">
       <div className="relative">
         <button
           onClick={handlePrev}
-          disabled={currentIndex === 0}
           className={`
-            absolute top-25 left-4 transform -translate-y-1/2 
+            absolute cursor-pointer top-25 left-4 transform -translate-y-1/2 
             bg-white p-2 rounded-full shadow-md
             hover:bg-gray-200 transition-transform duration-300
-            disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed
             z-30
           `}
           aria-label="Previous"
@@ -95,12 +96,10 @@ export default function NewArrivalCarousel({
 
         <button
           onClick={handleNext}
-          disabled={currentIndex >= maxIndex}
           className={`
             absolute top-25 right-4 transform -translate-y-1/2 
             bg-white p-2 rounded-full shadow-md
             hover:bg-gray-200 transition-transform duration-300
-            disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed
             z-30
           `}
           aria-label="Next"
@@ -143,7 +142,7 @@ export default function NewArrivalCarousel({
               </div>
 
               <div className="p-4 relative">
-                <h3 className="font-medium text-sm text-gray-800">
+                <h3 className="font-bold text-base text-yellow-600">
                   {product.name.length > 30
                     ? product.name.slice(0, 30) + "..."
                     : product.name}
@@ -151,12 +150,12 @@ export default function NewArrivalCarousel({
 
                 <div className="mt-0 lg:mt-4 relative h-10">
                   <p
-                    className={`mt-3 text-xs text-gray-600 transition-opacity duration-300 ${
+                    className={`mt-3 text-sm text-gray-600 transition-opacity duration-300 ${
                       itemsPerPage === 1 ? "" : "group-hover:opacity-0"
                     }`}
                   >
-                    {product.description.length > 90
-                      ? product.description.slice(0, 90) + "..."
+                    {product.description.length > 75
+                      ? product.description.slice(0, 75) + "..."
                       : product.description}
                   </p>
 
@@ -193,7 +192,7 @@ export default function NewArrivalCarousel({
                   </div>
                 )}
 
-                <span className="text-sm font-semibold absolute top-4 right-4">
+                <span className="text-sm font-semibold absolute top-4 right-4 text-green-600">
                   ${Number(product.price).toFixed(2)}
                 </span>
               </div>
@@ -203,11 +202,10 @@ export default function NewArrivalCarousel({
 
         {/* Pagination Dots */}
         <div className="flex justify-center mt-6 space-x-2">
-          {Array.from({
-            length: Math.ceil(products.length / itemsPerPage),
-          }).map((_, pageIndex) => {
+          {Array.from({ length: totalPages }).map((_, pageIndex) => {
             const pageStartIndex = pageIndex * itemsPerPage;
-            const isActive = currentIndex === pageStartIndex;
+            const isActive =
+              Math.floor(currentIndex / itemsPerPage) === pageIndex;
 
             return (
               <button
