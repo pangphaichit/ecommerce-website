@@ -23,17 +23,18 @@ interface Product {
   image_file?: File;
 }
 
-export default function NewArrivalSection() {
+export default function BestSellingSection() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchNewArrivals = async () => {
+    const fetchBestSelling = async () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await axios.get("/api/products?limit=8&sort=newest");
+        const res = await axios.get("/api/products/best-selling");
+        console.log(res.data.product);
         setProducts(res.data.product || []);
       } catch (err) {
         console.error("Failed to fetch new arrivals:", err);
@@ -43,7 +44,7 @@ export default function NewArrivalSection() {
       }
     };
 
-    fetchNewArrivals();
+    fetchBestSelling();
   }, []);
 
   if (error)
@@ -52,7 +53,7 @@ export default function NewArrivalSection() {
   return (
     <div className="my-8">
       <h2 className="text-xl font-bold mb-4 text-center lg:text-start lg:ml-[3%]">
-        New Arrivals
+        Best Selling
       </h2>
       {loading ? (
         <SkeletonProductsCarousel />

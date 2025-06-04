@@ -24,7 +24,7 @@ interface Product {
   image_file?: File;
 }
 
-export default function NewArrivalCarousel({
+export default function ProductsCarousel({
   products,
 }: {
   products: Product[];
@@ -53,7 +53,7 @@ export default function NewArrivalCarousel({
     return () => window.removeEventListener("resize", updateItemsPerPage);
   }, []);
 
-  const latestProducts = products.slice(-8);
+  const latestProducts = Array.isArray(products) ? products.slice(-8) : [];
 
   const total = latestProducts.length;
 
@@ -109,58 +109,77 @@ export default function NewArrivalCarousel({
 
         {/* Grid layout adapts for mobile and desktop */}
         <div
-          className={`grid gap-6 ${
+          className={`grid gap-4 ${
             itemsPerPage === 1 ? "grid-cols-1" : "grid-cols-4"
           }`}
         >
-          {visibleProducts.map((product) => (
-            <div
-              key={product.product_id}
-              onClick={() => handleProductClick(product.slug)}
-              className="group border border-gray-200 rounded-xl overflow-hidden relative transition-all cursor-pointer hover:shadow-lg"
-            >
-              <div className="relative h-48 bg-gray-100">
-                {!product.is_available && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="absolute inset-0 bg-gray-500 bg-opacity-30" />
-                    <Badge
-                      variant="destructive"
-                      className="text-sm z-10 flex items-center justify-center"
-                    >
-                      Out of Stock
-                    </Badge>
-                  </div>
-                )}
+          {visibleProducts.map((product) => {
+            if (!product) return null;
+            return (
+              <div
+                key={product.product_id}
+                onClick={() => handleProductClick(product.slug)}
+                className="group border border-gray-200 rounded-xl overflow-hidden relative transition-all cursor-pointer hover:shadow-lg"
+              >
+                <div className="relative h-52 bg-gray-100">
+                  {!product.is_available && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="absolute inset-0 bg-gray-500 bg-opacity-30" />
+                      <Badge
+                        variant="destructive"
+                        className="text-sm z-10 flex items-center justify-center"
+                      >
+                        Out of Stock
+                      </Badge>
+                    </div>
+                  )}
 
-                <img
-                  src={`${product.image_url}?t=${Date.now()}`}
-                  alt={product.name}
-                  className={`relative h-full w-full object-cover ${
-                    !product.is_available ? "grayscale opacity-50" : ""
-                  }`}
-                />
-              </div>
-
-              <div className="p-4 relative">
-                <h3 className="font-bold text-base text-yellow-600">
-                  {product.name.length > 30
-                    ? product.name.slice(0, 30) + "..."
-                    : product.name}
-                </h3>
-
-                <div className="mt-0 lg:mt-4 relative h-10">
-                  <p
-                    className={`mt-3 text-sm text-gray-600 transition-opacity duration-300 ${
-                      itemsPerPage === 1 ? "" : "group-hover:opacity-0"
+                  <img
+                    src={`${product.image_url}?t=${Date.now()}`}
+                    alt={product.name}
+                    className={`relative h-full w-full object-cover ${
+                      !product.is_available ? "grayscale opacity-50" : ""
                     }`}
-                  >
-                    {product.description.length > 75
-                      ? product.description.slice(0, 75) + "..."
-                      : product.description}
-                  </p>
+                  />
+                </div>
 
-                  {itemsPerPage !== 1 && (
-                    <div className="absolute inset-0 flex justify-center items-center gap-2 bg-white bg-opacity-90 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="p-4 relative">
+                  <h3 className="font-bold text-[0.95rem]  text-yellow-600">
+                    {product.name.length > 30
+                      ? product.name.slice(0, 30) + "..."
+                      : product.name}
+                  </h3>
+
+                  <div className="mt-0 lg:mt-4 relative h-14">
+                    <p
+                      className={`mt-3 text-sm text-gray-600 transition-opacity duration-300 ${
+                        itemsPerPage === 1 ? "" : "group-hover:opacity-0"
+                      }`}
+                    >
+                      {product.description.length > 120
+                        ? product.description.slice(0, 120) + "..."
+                        : product.description}
+                    </p>
+
+                    {itemsPerPage !== 1 && (
+                      <div className="absolute inset-0 flex justify-center items-center gap-2 bg-white bg-opacity-90 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <Button
+                          size="sm"
+                          variant="yellow"
+                          className="w-full rounded-full text-xs"
+                          disabled={!product.is_available}
+                        >
+                          Add to Bag
+                        </Button>
+                        <Button variant="ghost" size="icon-sm">
+                          <Heart className="text-yellow-500" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {itemsPerPage === 1 && (
+                    <div className="mt-3 flex gap-2">
                       <Button
                         size="sm"
                         variant="yellow"
@@ -174,30 +193,14 @@ export default function NewArrivalCarousel({
                       </Button>
                     </div>
                   )}
+
+                  <span className="text-[0.95rem] font-semibold absolute top-4 right-4 text-green-600">
+                    ${Number(product.price).toFixed(2)}
+                  </span>
                 </div>
-
-                {itemsPerPage === 1 && (
-                  <div className="mt-3 flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="yellow"
-                      className="w-full rounded-full text-xs"
-                      disabled={!product.is_available}
-                    >
-                      Add to Bag
-                    </Button>
-                    <Button variant="ghost" size="icon-sm">
-                      <Heart className="text-yellow-500" />
-                    </Button>
-                  </div>
-                )}
-
-                <span className="text-sm font-semibold absolute top-4 right-4 text-green-600">
-                  ${Number(product.price).toFixed(2)}
-                </span>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Pagination Dots */}

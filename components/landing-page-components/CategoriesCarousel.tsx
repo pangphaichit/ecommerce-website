@@ -78,7 +78,7 @@ export default function CategoriesDisplay() {
 
   return (
     <div>
-      <div className="relative w-full max-w-[93%] lg:max-w-[95%] mx-auto mb-8">
+      <div className="relative w-full max-w-[93%] lg:max-w-[95%] mx-auto">
         {/* Mobile */}
         <div className="block lg:hidden">
           <div className="relative">
