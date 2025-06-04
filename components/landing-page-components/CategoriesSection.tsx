@@ -40,7 +40,7 @@ export default function CategoriesDisplay() {
   }
 
   return (
-    <div className="my-8">
+    <div>
       <h2 className="text-xl font-bold mb-4 text-center lg:text-start lg:ml-[3%]">
         Shop by Category
       </h2>

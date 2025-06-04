@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function SkeletonNewArrival() {
+export default function SkeletonProductsCarousel() {
   // State to track how many items to show per page (responsive)
   const [itemsPerPage, setItemsPerPage] = useState(1);
 
