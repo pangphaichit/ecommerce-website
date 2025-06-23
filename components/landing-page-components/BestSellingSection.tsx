@@ -34,11 +34,10 @@ export default function BestSellingSection() {
         setLoading(true);
         setError(null);
         const res = await axios.get("/api/products/best-selling");
-        console.log(res.data.product);
         setProducts(res.data.product || []);
       } catch (err) {
-        console.error("Failed to fetch new arrivals:", err);
-        setError("Failed to load new arrivals.");
+        console.error("Failed to fetch best selling products:", err);
+        setError("Failed to load best selling products.");
       } finally {
         setLoading(false);
       }

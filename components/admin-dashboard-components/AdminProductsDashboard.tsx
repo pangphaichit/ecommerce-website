@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import axios from "axios";
 import {
   Package,
@@ -1086,7 +1087,7 @@ const AdminProductsDashboard = () => {
                             </div>
                           )}
                           {product.image_url ? (
-                            <img
+                            <Image
                               src={`${product.image_url}?t=${Date.now()}`}
                               alt={product.name}
                               className={`relative h-full w-full object-cover ${
@@ -1094,6 +1095,7 @@ const AdminProductsDashboard = () => {
                                   ? "grayscale opacity-50"
                                   : ""
                               }`}
+                              sizes="100%"
                             />
                           ) : (
                             <Package size={48} className="text-gray-400" />
