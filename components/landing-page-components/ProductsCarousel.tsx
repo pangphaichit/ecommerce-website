@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
@@ -134,12 +135,15 @@ export default function ProductsCarousel({
                     </div>
                   )}
 
-                  <img
+                  <Image
                     src={`${product.image_url}?t=${Date.now()}`}
                     alt={product.name}
                     className={`relative h-full w-full object-cover ${
                       !product.is_available ? "grayscale opacity-50" : ""
                     }`}
+                    sizes="100%"
+                    width={10}
+                    height={10}
                   />
                 </div>
 

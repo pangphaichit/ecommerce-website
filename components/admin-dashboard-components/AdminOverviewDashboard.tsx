@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Image from "next/image";
 import {
   ShoppingCart,
   DollarSign,
@@ -436,9 +437,11 @@ const AdminOverviewDashboard = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <div className="flex items-center">
-                        <img
+                        <Image
                           src={order.customerAvatar || "/placeholder.svg"}
                           alt={order.customer}
+                          width={32}
+                          height={32}
                           className="h-8 w-8 rounded-full mr-2"
                         />
                         <span>{order.customer}</span>

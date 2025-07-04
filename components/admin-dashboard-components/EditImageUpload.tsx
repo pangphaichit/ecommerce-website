@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import Image from "next/image";
 import { ImagePlus } from "lucide-react";
 
 interface EditImageUploadProps {
@@ -55,10 +56,11 @@ function EditImageUpload({
         } flex flex-col items-center justify-center hover:bg-gray-50 transition`}
       >
         {preview ? (
-          <img
+          <Image
             src={preview}
             alt="Preview"
             className="object-cover w-full h-full rounded-md"
+            sizes="100%"
           />
         ) : (
           <>
