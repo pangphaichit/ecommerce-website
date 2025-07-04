@@ -10,7 +10,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       onChange,
       error,
       errorMsg,
-      type = "text",
+      type,
       placeholder,
       required = true,
       ariaDescribedby,
