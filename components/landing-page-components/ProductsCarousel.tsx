@@ -142,6 +142,8 @@ export default function ProductsCarousel({
                       !product.is_available ? "grayscale opacity-50" : ""
                     }`}
                     sizes="100%"
+                    width={10}
+                    height={10}
                   />
                 </div>
 
