@@ -87,7 +87,7 @@ export default function ProductsCarousel({
           className={`
             absolute cursor-pointer top-25 left-4 transform -translate-y-1/2 
             bg-white p-2 rounded-full shadow-md
-            hover:bg-gray-200 transition-transform duration-300
+            hover:text-yellow-600 transition-transform duration-300
             z-30
           `}
           aria-label="Previous"
@@ -98,9 +98,9 @@ export default function ProductsCarousel({
         <button
           onClick={handleNext}
           className={`
-            absolute top-25 right-4 transform -translate-y-1/2 
-            bg-white p-2 rounded-full shadow-md
-            hover:bg-gray-200 transition-transform duration-300
+            absolute cursor-pointer top-25 right-4 transform -translate-y-1/2 
+             bg-white p-2 rounded-full shadow-md
+            hover:text-yellow-600 transition-transform duration-300
             z-30
           `}
           aria-label="Next"
