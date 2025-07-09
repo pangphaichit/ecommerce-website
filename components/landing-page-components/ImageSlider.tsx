@@ -158,7 +158,7 @@ const ImageSlider = () => {
           {/* Left Button */}
           <button
             onClick={prevSlide}
-            className="cursor-pointer absolute left-5 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md hover:bg-gray-200 transition"
+            className="cursor-pointer absolute left-5 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md hover:text-yellow-600 transition"
             onMouseEnter={() => setAutoPlay(false)}
             onMouseLeave={() => setAutoPlay(true)}
           >
@@ -168,7 +168,7 @@ const ImageSlider = () => {
           {/* Right Button */}
           <button
             onClick={nextSlide}
-            className="cursor-pointer absolute right-5 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md hover:bg-gray-200 transition"
+            className="cursor-pointer absolute right-5 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md hover:text-yellow-600 transition"
             onMouseEnter={() => setAutoPlay(false)}
             onMouseLeave={() => setAutoPlay(true)}
           >
