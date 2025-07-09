@@ -5,6 +5,7 @@ import ImageSlider from "@/components/landing-page-components/ImageSlider";
 import NewArrivalSection from "@/components/landing-page-components/NewArrivalSection";
 import CategoriesSection from "@/components/landing-page-components/CategoriesSection";
 import BestSellingSection from "@/components/landing-page-components/BestSellingSection";
+import ReviewsSection from "@/components/landing-page-components/ReviewsSection";
 import NewsletterSection from "@/components/NewsletterSection";
 import AppFooter from "@/components/AppFooter";
 
@@ -16,6 +17,7 @@ const HomePage: React.FC = () => {
       <ImageSlider />
       <NewArrivalSection />
       <CategoriesSection />
+      <ReviewsSection />
       <BestSellingSection />
       <NewsletterSection />
       <AppFooter />
