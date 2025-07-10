@@ -50,7 +50,7 @@ export default function NewArrivalSection() {
     return <div className="text-red-500 text-center my-4">{error}</div>;
 
   return (
-    <div className="my-8">
+    <div className="mt-8">
       <h2 className="text-xl font-bold mb-4 text-center lg:text-start lg:ml-[3%]">
         New Arrivals
       </h2>
