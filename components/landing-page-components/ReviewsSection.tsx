@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import axios from "axios";
 import { Star, ThumbsUp, ChevronLeft, ChevronRight } from "lucide-react";
 import SkeletonReviewsSection from "@/components/ui/SkeletonReviewsSection";
@@ -77,7 +78,7 @@ export default function ReviewsSection() {
   if (loading) return <SkeletonReviewsSection />;
 
   return (
-    <div className=" bg-gray-100 py-4 mt-8">
+    <div className=" bg-gray-100 py-8 mb-8">
       <div className=" relative w-full max-w-[93%] lg:max-w-[95%] mx-auto pt-3 pb-4">
         <h2 className=" text-xl lg:text-2xl text-yellow-600 font-bold mb-4 text-center">
           Customer Reviews
@@ -123,22 +124,28 @@ export default function ReviewsSection() {
             {visibleReviews.map((review) => (
               <div
                 key={review.review_id}
-                className="relative bg-white rounded-2xl shadow-md overflow-hidden w-full"
+                className="relative bg-white rounded-lg  overflow-hidden w-full hover:scale-102 shadow-sm hover:shadow-m"
               >
                 {/* content here same as before */}
                 <div className="h-45 w-full">
-                  <img
+                  <Image
                     src={review.image_url}
                     alt={review.title}
                     className="w-full h-full object-cover"
+                    sizes="100%"
+                    width={10}
+                    height={10}
                   />
                 </div>
 
                 <div className="absolute left-1/2 top-35 transform -translate-x-1/2 z-10">
-                  <img
+                  <Image
                     src={review.user.image}
                     alt={review.user.full_name}
                     className="w-18 h-18 lg:w-17 lg:h-17 rounded-full border-2 border-white shadow object-cover"
+                    sizes="100%"
+                    width={18}
+                    height={18}
                   />
                 </div>
 

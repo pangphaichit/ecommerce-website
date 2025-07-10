@@ -6,6 +6,7 @@ import NewArrivalSection from "@/components/landing-page-components/NewArrivalSe
 import CategoriesSection from "@/components/landing-page-components/CategoriesSection";
 import BestSellingSection from "@/components/landing-page-components/BestSellingSection";
 import ReviewsSection from "@/components/landing-page-components/ReviewsSection";
+import BenefitsSection from "@/components/landing-page-components/BenefitsSection";
 import NewsletterSection from "@/components/NewsletterSection";
 import AppFooter from "@/components/AppFooter";
 
@@ -17,8 +18,9 @@ const HomePage: React.FC = () => {
       <ImageSlider />
       <NewArrivalSection />
       <CategoriesSection />
-      <ReviewsSection />
       <BestSellingSection />
+      <BenefitsSection />
+      <ReviewsSection />
       <NewsletterSection />
       <AppFooter />
     </div>
