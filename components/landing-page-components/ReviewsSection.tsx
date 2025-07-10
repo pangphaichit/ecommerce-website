@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import axios from "axios";
 import { Star, ThumbsUp, ChevronLeft, ChevronRight } from "lucide-react";
 import SkeletonReviewsSection from "@/components/ui/SkeletonReviewsSection";
@@ -123,22 +124,28 @@ export default function ReviewsSection() {
             {visibleReviews.map((review) => (
               <div
                 key={review.review_id}
-                className="relative bg-white rounded-2xl shadow-md overflow-hidden w-full"
+                className="relative bg-white rounded-lg shadow-md overflow-hidden w-full hover:scale-102"
               >
                 {/* content here same as before */}
                 <div className="h-45 w-full">
-                  <img
+                  <Image
                     src={review.image_url}
                     alt={review.title}
                     className="w-full h-full object-cover"
+                    sizes="100%"
+                    width={10}
+                    height={10}
                   />
                 </div>
 
                 <div className="absolute left-1/2 top-35 transform -translate-x-1/2 z-10">
-                  <img
+                  <Image
                     src={review.user.image}
                     alt={review.user.full_name}
                     className="w-18 h-18 lg:w-17 lg:h-17 rounded-full border-2 border-white shadow object-cover"
+                    sizes="100%"
+                    width={18}
+                    height={18}
                   />
                 </div>
 

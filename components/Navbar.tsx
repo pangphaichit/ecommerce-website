@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, KeyboardEvent } from "react";
 import axios from "axios";
 import { useAuth } from "@/context/authentication";
 import { useRouter } from "next/router";
@@ -7,6 +7,34 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Button from "@/components/ui/Button";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+
+interface Product {
+  product_id: string;
+  name: string;
+  description: string;
+  price: number | null;
+  is_available: boolean;
+  category_id: number | null;
+  size: string;
+  ingredients: string;
+  allergens: string;
+  nutritional_info: string;
+  seasonal: string;
+  collection: string;
+  stock_quantity: number;
+  min_order_quantity: number;
+  image_url: string;
+  slug: string;
+  image_file?: File;
+}
+
+interface PaginationData {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 const routes = [
   { name: "Home", path: "/" },
@@ -30,6 +58,73 @@ const Navbar = () => {
   const [userImage, setUserImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSearchInput, setShowSearchInput] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [submittedSearch, setSubmittedSearch] = useState("");
+  const [pagination, setPagination] = useState<PaginationData>({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 0,
+  });
+  const [products, setProducts] = useState<Product[]>([]);
+
+  // Function to trigger search
+  const onSearch = async () => {
+    setSubmittedSearch(searchQuery);
+  };
+
+  // Trigger search on Enter key
+  const onInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      onSearch();
+    }
+  };
+
+  const handleProductClick = (slug: string) => {
+    router.push(`/products/${slug}`);
+  };
+
+  // Fetch products when submittedSearch changes or pagination changes
+  useEffect(() => {
+    if (!submittedSearch.trim()) {
+      // Clear products and don't fetch if no submitted search
+      setProducts([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+    fetchProducts();
+  }, [submittedSearch, pagination.page]);
+
+  // Function to fetch products
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const params: any = {
+        page: pagination.page,
+        limit: pagination.limit,
+      };
+
+      // Add conditional filters
+      if (submittedSearch) params.search = submittedSearch;
+
+      const response = await axios.get("/api/products", { params });
+
+      setProducts(response.data.product);
+      setPagination(response.data.pagination);
+      console.log("Products fetched:", response.data.product);
+      console.log("Pagination:", response.data.pagination);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -147,13 +242,25 @@ const Navbar = () => {
                   onClick={() => setIsOpen(!isOpen)}
                   className="lg:hidden text-gray-800 z-50"
                 >
-                  {isOpen ? <X size={28} /> : <Menu size={28} />}
+                  {isOpen ? (
+                    <X
+                      size={28}
+                      className="cursor-pointer hover:text-yellow-600"
+                    />
+                  ) : (
+                    <Menu
+                      size={28}
+                      className="cursor-pointer hover:text-yellow-600"
+                    />
+                  )}
                 </button>
               </div>
               <Search
                 size={24}
                 className="text-gray-800 hover:text-yellow-600 cursor-pointer hidden lg:block"
+                onClick={() => setShowSearchInput(!showSearchInput)}
               />
+
               <Heart
                 size={24}
                 className="text-gray-800 hover:text-yellow-600 cursor-pointer hidden lg:block"
@@ -273,6 +380,116 @@ const Navbar = () => {
             </li>
           ))}
         </ul>
+        {/* Desktop Search Input - only if icon clicked */}
+        {showSearchInput && (
+          <div className="hidden lg:flex w-full px-10 mb-6">
+            <div className="flex w-full gap-4">
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={onInputKeyDown}
+                className="flex-grow px-4 py-2 border-b-2 text-xl border-gray-300 focus:outline-none focus:border-yellow-600 focus:text-gray-500 text-yellow-600 placeholder-gray-400"
+              />
+              <button
+                onClick={onSearch}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-r-md cursor-pointer"
+              >
+                <Search size={20} />
+              </button>
+            </div>
+          </div>
+        )}
+        {showSearchInput && submittedSearch && (
+          <div className="hidden lg:block w-full px-10 mb-6">
+            {/* Show loading, error, or products list */}
+            {loading && (
+              <p className="flex flex-row justify-center text-center text-lg h-full text-gray-500 mb-4 gap-3">
+                <LoadingSpinner size="sm" color="#9CA3AF" /> Loading products...
+              </p>
+            )}
+            {error && <p className="text-center text-red-500 mb-4">{error}</p>}
+            {!error && !loading && submittedSearch && products.length === 0 && (
+              <div className="flex justify-between items-center text-gray-500 mb-4">
+                <span className="text-lg">
+                  Oops! We couldn’t find anything for{" "}
+                  <span className="font-semibold text-yellow-600">
+                    "{submittedSearch}"{" "}
+                  </span>
+                </span>
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSubmittedSearch("");
+                    setProducts([]);
+                  }}
+                  className="flex items-center gap-2 rounded-full bg-yellow-50 text-yellow-600 hover:bg-yellow-100 border border-yellow-200 px-3 py-2 cursor-pointer"
+                  aria-label="Clear search input"
+                  type="button"
+                  tabIndex={-1}
+                >
+                  <X size={18} />
+                  Clear search
+                </button>
+              </div>
+            )}
+
+            {products.length > 0 && (
+              <div>
+                {/* Clear X button - only shows if input has value */}
+                {submittedSearch && searchQuery && products.length > 0 && (
+                  <div className="flex flex-row justify-center mb-6">
+                    <span className="flex  items-center text-lg  text-gray-500">
+                      Search Results for{" "}
+                      <span className="ml-1 text-yellow-600 font-semibold">
+                        "{submittedSearch}"
+                      </span>
+                    </span>
+                    <button
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSubmittedSearch("");
+                        setProducts([]);
+                      }}
+                      className="absolute right-10 rounded-full bg-yellow-50 text-yellow-600 hover:bg-yellow-100 border border-yellow-200 p-2 cursor-pointer"
+                      aria-label="Clear search input"
+                      type="button"
+                      tabIndex={-1}
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                )}
+                <ul className="grid grid-cols-3 gap-4">
+                  {products.map((product) => (
+                    <li
+                      key={product.product_id}
+                      onClick={() => handleProductClick(product.slug)}
+                      className="flex items-start border border-gray-200 rounded-md p-3 cursor-pointer hover:border-yellow-600 hover:scale-101 transition-transform duration-200  gap-4"
+                    >
+                      <Image
+                        src={product.image_url || "/placeholder.png"}
+                        alt={product.name}
+                        width={80}
+                        height={80}
+                        className="object-cover rounded"
+                      />
+                      <div className="flex flex-col">
+                        <h3 className="font-semibold text-gray-900 text-base ">
+                          {product.name}
+                        </h3>
+                        <p className="text-gray-600 text-sm line-clamp-2">
+                          {product.description}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
       </nav>
 
       {/* Mobile Menu */}
@@ -349,37 +566,137 @@ const Navbar = () => {
             </div>
           )}
 
-          {/* Close Button */}
           {/* Search Bar */}
-          <div className="flex flex-row items-center justify-center py-2">
+          <div className="relative flex flex-row items-center justify-center py-2 gap-4 mb-4 mx-4">
             <Search
               size={24}
               className="text-gray-800 hover:text-yellow-600 cursor-pointer hidden lg:block"
             />
+
             <input
               type="text"
-              placeholder="Search..."
-              className="px-4 py-2 w-80 border-b-2 border-gray-300 focus:outline-none focus:border-yellow-600"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={onInputKeyDown}
+              className="px-4 py-2 w-80 border-b-2 border-gray-300 focus:outline-none focus:border-yellow-600 focus:text-gray-500 text-yellow-600 placeholder-gray-400"
             />
+
+            <button
+              onClick={onSearch}
+              className="relative bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-r-md cursor-pointer"
+              aria-label="Search"
+            >
+              <Search size={20} />
+            </button>
           </div>
-          {/* Menu Items */}
-          <ul className="flex flex-col items-center space-y-4 py-4">
-            {routes.map((route) => (
-              <li key={route.name} className="py-1">
-                <Link
-                  href={route.path}
-                  className={`px-4 py-2 transition-colors w-full ${
-                    activeItem === route.name
-                      ? " text-yellow-600 font-semibold"
-                      : "text-gray-800 hover:text-yellow-600 font-semibold"
-                  }`}
-                  onClick={() => handleNavClick(route.name)}
+
+          {/* Show loading, error, or products list */}
+          {loading && (
+            <p className="flex flex-row justify-center text-center  h-full text-gray-500 mb-4 gap-3">
+              <LoadingSpinner size="sm" color="#9CA3AF" /> Loading products...
+            </p>
+          )}
+          {error && <p className="text-center text-red-500 mb-4">{error}</p>}
+          {!error && !loading && submittedSearch && products.length === 0 && (
+            <div className="flex flex-col items-center text-gray-500 mb-4 mx-4 gap-4">
+              <span className="text-sm">
+                Oops! We couldn’t find anything for{" "}
+                <span className="font-semibold text-base text-yellow-600">
+                  "{submittedSearch}"{" "}
+                </span>
+              </span>
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSubmittedSearch("");
+                  setProducts([]);
+                }}
+                className="flex items-center gap-2 text-base rounded-full bg-yellow-50 text-yellow-600 hover:bg-yellow-100 border border-yellow-200 px-3 py-2 cursor-pointer"
+                aria-label="Clear search input"
+                type="button"
+                tabIndex={-1}
+              >
+                <X size={18} />
+                Clear search
+              </button>
+            </div>
+          )}
+
+          {/* Clear X button - only shows if input has value */}
+          {submittedSearch && searchQuery && products.length > 0 && (
+            <div className="flex flex-row item-center justify-center gap-4 mb-4">
+              <span className="flex items-center text-lg  text-gray-500">
+                Search Results for{" "}
+                <span className="ml-1 text-yellow-600 font-semibold">
+                  "{submittedSearch}"
+                </span>
+              </span>
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSubmittedSearch("");
+                  setProducts([]);
+                }}
+                className="absolute right-4 rounded-full bg-yellow-50 text-yellow-600 hover:bg-yellow-100 border border-yellow-200 p-1 cursor-pointer"
+                aria-label="Clear search input"
+                type="button"
+                tabIndex={-1}
+              >
+                <X size={18} />
+              </button>
+            </div>
+          )}
+
+          {/* Products list */}
+          {products.length > 0 && (
+            <ul className="mb-4">
+              {products.map((product) => (
+                <li
+                  key={product.product_id}
+                  onClick={() => handleProductClick(product.slug)}
+                  className="flex items-start gap-3 border border-gray-200 rounded-md p-3 mx-4 cursor-pointer hover:border-yellow-600 hover:scale-102 mb-4"
                 >
-                  {route.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
+                  <Image
+                    src={product.image_url || "/placeholder.png"}
+                    alt={product.name}
+                    width={64}
+                    height={64}
+                    className="object-cover rounded"
+                  />
+                  <div className="flex flex-col">
+                    <h3 className="font-semibold text-gray-900 text-base">
+                      {product.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm line-clamp-2">
+                      {product.description}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* Menu Items */}
+          {!submittedSearch && (
+            <ul className="flex flex-col items-center space-y-4 py-4">
+              {routes.map((route) => (
+                <li key={route.name} className="py-1">
+                  <Link
+                    href={route.path}
+                    className={`px-4 py-2 transition-colors w-full ${
+                      activeItem === route.name
+                        ? " text-yellow-600 font-semibold"
+                        : "text-gray-800 hover:text-yellow-600 font-semibold"
+                    }`}
+                    onClick={() => handleNavClick(route.name)}
+                  >
+                    {route.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </div>
