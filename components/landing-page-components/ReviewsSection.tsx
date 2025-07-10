@@ -78,7 +78,7 @@ export default function ReviewsSection() {
   if (loading) return <SkeletonReviewsSection />;
 
   return (
-    <div className=" bg-gray-100 py-4 mt-8">
+    <div className=" bg-gray-100 py-8 mb-8">
       <div className=" relative w-full max-w-[93%] lg:max-w-[95%] mx-auto pt-3 pb-4">
         <h2 className=" text-xl lg:text-2xl text-yellow-600 font-bold mb-4 text-center">
           Customer Reviews
@@ -124,7 +124,7 @@ export default function ReviewsSection() {
             {visibleReviews.map((review) => (
               <div
                 key={review.review_id}
-                className="relative bg-white rounded-lg shadow-md overflow-hidden w-full hover:scale-102"
+                className="relative bg-white rounded-lg  overflow-hidden w-full hover:scale-102 shadow-sm hover:shadow-m"
               >
                 {/* content here same as before */}
                 <div className="h-45 w-full">
