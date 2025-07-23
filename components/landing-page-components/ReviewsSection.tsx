@@ -126,7 +126,7 @@ export default function ReviewsSection() {
                 key={review.review_id}
                 className="relative bg-white rounded-lg  overflow-hidden w-full hover:scale-102 shadow-sm hover:shadow-m"
               >
-                {/* content here same as before */}
+                {/* content */}
                 <div className="h-45 w-full">
                   <Image
                     src={review.image_url}
