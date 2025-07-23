@@ -28,6 +28,7 @@ import SkeletonAdmin from "@/components/ui/SkeletonAdmin";
 import EditImageUpload from "./EditImageUpload";
 import CustomAlert from "@/components/ui/CustomAlert";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Pagination from "@/components/ui/Pagination";
 
 interface Product {
   product_id: string;
@@ -83,7 +84,7 @@ const AdminProductsDashboard = () => {
   const [pagination, setPagination] = useState<PaginationData>({
     total: 0,
     page: 1,
-    limit: 10,
+    limit: 12,
     totalPages: 0,
   });
   const [newProduct, setNewProduct] = useState<Partial<Product>>({
@@ -1046,7 +1047,7 @@ const AdminProductsDashboard = () => {
                 {loading ? (
                   <SkeletonAdmin />
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     {products.map((product) => (
                       <div
                         key={product.product_id}
@@ -1096,6 +1097,8 @@ const AdminProductsDashboard = () => {
                                   : ""
                               }`}
                               sizes="100%"
+                              width="10"
+                              height="10"
                             />
                           ) : (
                             <Package size={48} className="text-gray-400" />
@@ -1105,8 +1108,8 @@ const AdminProductsDashboard = () => {
                         <div className="p-4">
                           <div className="flex justify-between items-start">
                             <h3 className="font-semibold text-lg">
-                              {product.name.length > 20
-                                ? `${product.name.substring(0, 20)}...`
+                              {product.name.length > 30
+                                ? `${product.name.substring(0, 30)}...`
                                 : product.name}
                             </h3>
                             {!isSelectionMode && (
@@ -1181,6 +1184,13 @@ const AdminProductsDashboard = () => {
                   </div>
                 )}
               </div>
+              {/* Pagination Component */}
+              <Pagination
+                pagination={pagination}
+                onPageChange={handlePageChange}
+                showInfo={true}
+                maxVisiblePages={5}
+              />
             </>
           )}
         </div>
