@@ -64,7 +64,7 @@ const Navbar = () => {
   const [pagination, setPagination] = useState<PaginationData>({
     total: 0,
     page: 1,
-    limit: 10,
+    limit: 12,
     totalPages: 0,
   });
   const [products, setProducts] = useState<Product[]>([]);
