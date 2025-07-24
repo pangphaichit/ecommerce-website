@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import axios from "axios";
 import ProductList from "@/components/products-page-components/ProductList";
 import FilterSidebar from "@/components/products-page-components/FilterSidebar";
 import Select from "@/components/ui/Select";
 import Pagination from "@/components/ui/Pagination";
 import SkeletonProductList from "@/components/ui/SkeletonProductList";
+import Button from "@/components/ui/Button";
 
 interface Product {
   product_id: string;
@@ -44,7 +45,7 @@ interface Filters {
 
 export default function ProductSection() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [sort, setSort] = useState<string>("newest");
 
@@ -68,52 +69,71 @@ export default function ProductSection() {
     totalPages: 0,
   });
 
-  const filterOptions = [
-    { label: "Newest First", value: "newest" },
-    { label: "Oldest First", value: "oldest" },
-    { label: "Best Selling", value: "best_selling" },
-    { label: "Price: Low to High", value: "price_low" },
-    { label: "Price: High to Low", value: "price_high" },
-    { label: "Biggest Discount", value: "discount_high" },
-    { label: "A to Z", value: "alphabet_asc" },
-    { label: "Z to A", value: "alphabet_desc" },
-  ];
+  // Use ref to track if we're currently fetching to prevent duplicate calls
+  const isFetchingRef = useRef(false);
 
-  const ingredientsList = [
-    "Strawberry",
-    "Pumpkin",
-    "Caramel",
-    "Cinnamon",
-    "Chocolate",
-    "Cherries",
-    "Vanilla",
-    "Lemon",
-    "Peach",
-    "Blueberries",
-    "Mixed Berries",
-    "Banana",
-    "Raisins",
-    "Rum",
-    "Coffee",
-    "Rose Petals",
-  ];
+  // Use ref to track the last request parameters to avoid duplicate calls
+  const lastRequestRef = useRef<string>("");
 
-  const collectionsList = [
-    "Summer I Miss U",
-    "Autumn in My Heart",
-    "Starlight Series",
-    "Happy Birthday!",
-  ];
+  const filterOptions = useMemo(
+    () => [
+      { label: "Newest First", value: "newest" },
+      { label: "Oldest First", value: "oldest" },
+      { label: "Best Selling", value: "best_selling" },
+      { label: "Price: Low to High", value: "price_low" },
+      { label: "Price: High to Low", value: "price_high" },
+      { label: "Biggest Discount", value: "discount_high" },
+      { label: "A to Z", value: "alphabet_asc" },
+      { label: "Z to A", value: "alphabet_desc" },
+    ],
+    []
+  );
 
-  const seasonalList = [
-    "Christmas",
-    "Valentine's",
-    "Easter",
-    "New Year",
-    "Halloween",
-    "Mother's Day",
-    "Father's Day",
-  ];
+  // Make these static to avoid recreating on every render
+  const ingredientsList = useMemo(
+    () => [
+      "Strawberry",
+      "Pumpkin",
+      "Caramel",
+      "Cinnamon",
+      "Chocolate",
+      "Cherries",
+      "Vanilla",
+      "Lemon",
+      "Peach",
+      "Blueberries",
+      "Mixed Berries",
+      "Banana",
+      "Raisins",
+      "Rum",
+      "Coffee",
+      "Rose Petals",
+    ],
+    []
+  );
+
+  const collectionsList = useMemo(
+    () => [
+      "Summer I Miss U",
+      "Autumn in My Heart",
+      "Starlight Series",
+      "Happy Birthday!",
+    ],
+    []
+  );
+
+  const seasonalList = useMemo(
+    () => [
+      "Christmas",
+      "Valentine's",
+      "Easter",
+      "New Year",
+      "Halloween",
+      "Mother's Day",
+      "Father's Day",
+    ],
+    []
+  );
 
   // Fetch categories on mount
   useEffect(() => {
@@ -154,55 +174,115 @@ export default function ProductSection() {
     setPagination((prev) => ({ ...prev, page: 1 }));
   }, []);
 
-  // Check if any filters are active
-  const isFiltering =
-    filters.searchQuery !== "" ||
-    filters.priceRange < 30 ||
-    filters.categories.length > 0 ||
-    filters.ingredients.length > 0 ||
-    filters.collections.length > 0 ||
-    filters.occasionals.length > 0;
+  // Check if any filters are active - memoize this to prevent unnecessary recalculations
+  const isFiltering = useMemo(
+    () =>
+      filters.searchQuery !== "" ||
+      filters.priceRange < 30 ||
+      filters.categories.length > 0 ||
+      filters.ingredients.length > 0 ||
+      filters.collections.length > 0 ||
+      filters.occasionals.length > 0,
+    [filters]
+  );
 
-  // Fetch products function
-  const fetchProducts = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  // Memoize request parameters to detect duplicate calls
+  const requestParams = useMemo(() => {
+    const params: any = {
+      page: pagination.page,
+      limit: pagination.limit,
+      sort,
+    };
 
-      const params: any = {
-        page: pagination.page,
-        limit: pagination.limit,
-        sort,
-      };
+    // Add filter parameters
+    if (filters.searchQuery) params.search = filters.searchQuery;
+    if (filters.categories.length > 0)
+      params.category_id = filters.categories.join(",");
+    if (filters.ingredients.length > 0)
+      params.ingredients = filters.ingredients.join(",");
+    if (filters.collections.length > 0)
+      params.collection = filters.collections.join(",");
+    if (filters.occasionals.length > 0)
+      params.seasonal = filters.occasionals[0];
+    if (filters.priceRange < 30) params.maxPrice = filters.priceRange;
 
-      // Add filter parameters
-      if (filters.searchQuery) params.search = filters.searchQuery;
-      if (filters.categories.length > 0)
-        params.category_id = filters.categories.join(",");
-      if (filters.ingredients.length > 0)
-        params.ingredients = filters.ingredients.join(",");
-      if (filters.collections.length > 0)
-        params.collection = filters.collections.join(",");
-      if (filters.occasionals.length > 0)
-        params.seasonal = filters.occasionals[0];
-      if (filters.priceRange < 30) params.maxPrice = filters.priceRange;
-
-      const response = await axios.get("/api/products", { params });
-
-      setProducts(response.data.product || []);
-      setPagination(response.data.pagination);
-    } catch (err) {
-      console.error("Error fetching products:", err);
-      setError(err instanceof Error ? err.message : "Failed to load products");
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
+    return params;
   }, [pagination.page, pagination.limit, sort, filters]);
 
-  // Fetch products when dependencies change
+  // Fetch products function with duplicate call prevention
+  const fetchProducts = useCallback(async () => {
+    // Create a unique key for this request
+    const requestKey = JSON.stringify(requestParams);
+
+    // Prevent duplicate calls
+    if (isFetchingRef.current || requestKey === lastRequestRef.current) {
+      return;
+    }
+
+    try {
+      isFetchingRef.current = true;
+      lastRequestRef.current = requestKey;
+      setIsLoading(true);
+      setError(null);
+
+      const response = await axios.get("/api/products", {
+        params: requestParams,
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+        // Ensure 304 responses are handled properly
+        validateStatus: function (status) {
+          return (status >= 200 && status < 300) || status === 304;
+        },
+      });
+
+      // Handle both successful responses and 304 (not modified)
+      if (response.status === 304) {
+        // Data hasn't changed, keep current products if we have them
+        if (products.length === 0) {
+          // If we don't have products yet, this might be an issue
+          console.log("Received 304 but no cached products available");
+        }
+      } else {
+        // Normal successful response
+        setProducts(response.data.product || []);
+        setPagination(response.data.pagination);
+      }
+    } catch (err) {
+      console.error("Error fetching products:", err);
+
+      if (axios.isAxiosError(err)) {
+        if (err.response) {
+          console.error("Response status:", err.response.status);
+          console.error("Response data:", err.response.data);
+        } else if (err.request) {
+          console.error("No response received:", err.request);
+        } else {
+          console.error("Request setup error:", err.message);
+        }
+
+        setError(err.message);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to load products");
+      }
+
+      setProducts([]);
+    } finally {
+      setIsLoading(false);
+      isFetchingRef.current = false;
+    }
+  }, [requestParams, products.length]);
+
+  // Fetch products when dependencies change with a small debounce
   useEffect(() => {
-    fetchProducts();
+    const timeoutId = setTimeout(() => {
+      fetchProducts();
+    }, 100); // Small debounce to prevent rapid successive calls
+
+    return () => clearTimeout(timeoutId);
   }, [fetchProducts]);
 
   // Handle pagination change
@@ -221,7 +301,7 @@ export default function ProductSection() {
     setPagination((prev) => ({ ...prev, page: 1 })); // Reset to first page
   }, []);
 
-  if (error && !loading) {
+  if (error && !isLoading) {
     return (
       <div className="mt-8 flex justify-center">
         <div className="text-center py-16">
@@ -250,29 +330,24 @@ export default function ProductSection() {
             onFilterChange={handleFilterChange}
             currentFilters={filters}
             onClearFilters={handleClearFilters}
+            isLoading={isLoading}
           />
         </div>
 
         {/* Right: Product Listing Area */}
         <div className="flex flex-col w-full lg:w-[80%]">
           {/* Header with title and sort */}
-          <div className="flex flex-col lg:flex-row mx-4 justify-between item-start lg:items-center mb-4 lg:mx-8">
+          <div className="flex flex-col lg:flex-row mx-4 justify-between item-start lg:items-center mb-2 lg:mx-8">
             <div>
               <h2 className="text-xl lg:text-2xl font-semibold">
                 Our Products
               </h2>
-              <p className="text-xs lg:text-base text-gray-600">
+              <p className="text-base mt-2 text-gray-600">
                 Fresh from the oven - artisan breads, pastries & treats
               </p>
-              {/* Show filter status */}
-              {isFiltering && (
-                <p className="text-sm text-blue-600 mt-1">
-                  Showing filtered results ({pagination.total} items)
-                </p>
-              )}
             </div>
 
-            <div className="mt-4 lg:mt-0 lg:w-52">
+            <div className="mt-4 lg:mt-0 lg:w-52 mb-2">
               <Select
                 name="sort"
                 value={sort}
@@ -284,8 +359,26 @@ export default function ProductSection() {
             </div>
           </div>
 
+          {/* Show filter status */}
+          <div>
+            {isFiltering && (
+              <div className="flex flex-row justify-between lg:justify-start gap-2 items-center mx-4 my-2 lg:mx-8">
+                <p className="text-sm text-green-800 font-bold">
+                  Showing filtered results ({pagination.total} items)
+                </p>
+                <button
+                  onClick={handleClearFilters}
+                  className="flex text-[0.8rem] font-semibold px-2 py-1 items-center gap-1 rounded-full  border  hover:bg-yellow-50 text-red-400 border-red-400 cursor-pointer "
+                  type="button"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Products and Pagination */}
-          {loading ? (
+          {isLoading ? (
             <SkeletonProductList />
           ) : (
             <div className="mb-8">
