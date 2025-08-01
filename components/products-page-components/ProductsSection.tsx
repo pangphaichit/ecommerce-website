@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import axios from "axios";
+import { X } from "lucide-react";
 import ProductList from "@/components/products-page-components/ProductList";
 import FilterSidebar from "@/components/products-page-components/FilterSidebar";
 import Select from "@/components/ui/Select";
@@ -342,7 +343,7 @@ export default function ProductSection() {
               <h2 className="text-xl lg:text-2xl font-semibold">
                 Our Products
               </h2>
-              <p className="text-base mt-2 text-gray-600">
+              <p className="text-base lg:text-lg  mt-2 text-gray-600">
                 Fresh from the oven - artisan breads, pastries & treats
               </p>
             </div>
@@ -363,15 +364,15 @@ export default function ProductSection() {
           <div>
             {isFiltering && (
               <div className="flex flex-row justify-between lg:justify-start gap-2 items-center mx-4 my-2 lg:mx-8">
-                <p className="text-sm text-green-800 font-bold">
-                  Showing filtered results ({pagination.total} items)
-                </p>
                 <button
                   onClick={handleClearFilters}
-                  className="flex text-[0.8rem] font-semibold px-2 py-1 items-center gap-1 rounded-full  border  hover:bg-yellow-50 text-red-400 border-red-400 cursor-pointer "
+                  className="flex px-3 py-1 items-center gap-1 mb-4 rounded-full bg-gray-100 hover:bg-gray-200 cursor-pointer"
                   type="button"
                 >
-                  Clear Filters
+                  <p className="text-[0.8rem] lg:text-[0.9rem]">
+                    Showing filtered results ( {pagination.total} items )
+                  </p>
+                  <X size={15} />
                 </button>
               </div>
             )}
