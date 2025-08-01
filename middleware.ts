@@ -37,7 +37,6 @@ export function middleware(request: NextRequest) {
   );
 
   const userRole = cookies.user_role;
-  console.log("User role from cookie:", userRole);
 
   const isAuthenticated = Boolean(userRole);
 
