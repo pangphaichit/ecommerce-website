@@ -51,7 +51,7 @@ const ImageSlider = () => {
       action: {
         label: "Order Now",
         onClickAction: () => {
-          router.push("/");
+          router.push("/products/melt-in-your-mouth-brownie");
         },
       },
     },
@@ -67,7 +67,7 @@ const ImageSlider = () => {
       action: {
         label: "Order Now",
         onClickAction: () => {
-          router.push("/");
+          router.push("/products/macaron-la-rose");
         },
       },
     },

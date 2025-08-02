@@ -7,7 +7,7 @@ type ProductQueryParams = {
   name?: string;
   description?: string;
   category_id?: string;
-  category_slug: string;
+  category_slug?: string;
   ingredients?: string;
   collection?: string;
   seasonal?: string;
@@ -49,13 +49,36 @@ export default async function handler(
       sort,
       is_available,
       page = "1",
-      limit = "10",
+      limit = "12",
     } = req.query as ProductQueryParams;
 
     let query = `
-      SELECT products.*, categories.name as category_name
+       SELECT 
+        products.*, 
+        categories.name as category_name,
+        COALESCE(MAX(
+          CASE 
+            WHEN coupons.discount_type = 'percentage' AND coupons.discount_value IS NOT NULL THEN products.price * (coupons.discount_value / 100.0)
+            WHEN coupons.discount_type = 'fixed_amount' AND coupons.discount_value IS NOT NULL THEN coupons.discount_value
+            ELSE 0
+          END
+        ), 0) AS discount_amount
       FROM products
       LEFT JOIN categories ON categories.category_id = products.category_id
+      LEFT JOIN coupons ON (
+        coupons.is_active = true
+        AND NOW() BETWEEN coupons.valid_from AND coupons.valid_until
+        AND (
+          coupons.applies_to_all_products = true
+          OR (coupons.applies_to_product_ids IS NOT NULL AND products.product_id = ANY(coupons.applies_to_product_ids))
+          OR (coupons.applies_to_category_ids IS NOT NULL AND products.category_id = ANY(coupons.applies_to_category_ids))
+        )
+      )
+      LEFT JOIN (
+    SELECT product_id, SUM(quantity) as total_sold
+    FROM order_items
+    GROUP BY product_id
+  ) sales ON sales.product_id = products.product_id
       WHERE 1=1
     `;
 
@@ -122,7 +145,23 @@ export default async function handler(
     }
 
     if (collection) addFilter("products.collection =", collection);
-    if (seasonal) addFilter("products.seasonal =", seasonal);
+    const validSeasonals = [
+      "Christmas",
+      "Valentine's",
+      "Easter",
+      "New Year",
+      "Halloween",
+      "Mother's Day",
+      "Father's Day",
+    ];
+
+    if (
+      seasonal &&
+      seasonal.trim() !== "" &&
+      validSeasonals.includes(seasonal)
+    ) {
+      addFilter("products.seasonal =", seasonal);
+    }
     if (is_available === "true") addFilter("products.is_available =", true);
     if (is_available === "false") addFilter("products.is_available =", false);
     if (minPrice) addFilter("products.price >=", Number(minPrice));
@@ -130,20 +169,55 @@ export default async function handler(
 
     query += whereClause;
 
+    query += `
+      GROUP BY 
+        products.product_id,
+        products.name,
+        products.description,
+        products.price,
+        products.is_available,
+        products.category_id,
+        products.size,
+        products.ingredients,
+        products.allergens,
+        products.nutritional_info,
+        products.seasonal,
+        products.collection,
+        products.stock_quantity,
+        products.min_order_quantity,
+        products.image_url,
+        products.slug,
+        products.created_at,
+        categories.name,
+        sales.total_sold
+    `;
+
     // Sorting logic
     if (sort === "newest") {
       query += ` ORDER BY products.created_at DESC`;
     } else if (sort === "oldest") {
       query += ` ORDER BY products.created_at ASC`;
+    } else if (sort === "best_selling") {
+      query += ` ORDER BY sales.total_sold DESC NULLS LAST`;
+    } else if (sort === "discount_high") {
+      query += ` ORDER BY discount_amount DESC`;
+    } else if (sort === "discount_low") {
+      query += ` ORDER BY discount_amount ASC`;
+    } else if (sort === "price_high") {
+      query += ` ORDER BY products.price DESC`;
+    } else if (sort === "price_low") {
+      query += ` ORDER BY products.price ASC`;
+    } else if (sort === "alphabet_desc") {
+      query += ` ORDER BY products.name DESC`; // Z to A
     } else {
-      query += ` ORDER BY products.name ASC`;
+      query += ` ORDER BY products.name ASC`; // default A to Z
     }
 
     // Pagination calculation
     const pageNum = isNaN(parseInt(page)) ? 1 : Math.max(1, parseInt(page));
     const limitNum = isNaN(parseInt(limit))
-      ? 10
-      : Math.min(10, Math.max(1, parseInt(limit)));
+      ? 12
+      : Math.min(12, Math.max(1, parseInt(limit)));
     const offset = (pageNum - 1) * limitNum;
 
     const queryParams = [...filterParams];
@@ -153,9 +227,18 @@ export default async function handler(
     queryParams.push(limitNum, offset);
 
     const countQuery = `
-      SELECT COUNT(*) as total
+      SELECT COUNT(DISTINCT products.product_id) as total
       FROM products
       LEFT JOIN categories ON categories.category_id = products.category_id
+      LEFT JOIN coupons ON (
+        coupons.is_active = true
+        AND NOW() BETWEEN coupons.valid_from AND coupons.valid_until
+        AND (
+          coupons.applies_to_all_products = true
+          OR (coupons.applies_to_product_ids IS NOT NULL AND products.product_id = ANY(coupons.applies_to_product_ids))
+          OR (coupons.applies_to_category_ids IS NOT NULL AND products.category_id = ANY(coupons.applies_to_category_ids))
+        )
+      )
       WHERE 1=1 ${whereClause}
     `;
 
