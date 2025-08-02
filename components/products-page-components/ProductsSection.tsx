@@ -343,9 +343,7 @@ export default function ProductSection() {
               <h2 className="text-xl lg:text-2xl font-semibold">
                 Our Products
               </h2>
-
               <p className="text-base lg:text-lg  mt-2 text-gray-600">
-
                 Fresh from the oven - artisan breads, pastries & treats
               </p>
             </div>
@@ -366,7 +364,6 @@ export default function ProductSection() {
           <div>
             {isFiltering && (
               <div className="flex flex-row justify-between lg:justify-start gap-2 items-center mx-4 my-2 lg:mx-8">
-
                 <button
                   onClick={handleClearFilters}
                   className="flex px-3 py-1 items-center gap-1 mb-4 rounded-full bg-gray-100 hover:bg-gray-200 cursor-pointer"
@@ -376,7 +373,6 @@ export default function ProductSection() {
                     Showing filtered results ( {pagination.total} items )
                   </p>
                   <X size={15} />
-
                 </button>
               </div>
             )}

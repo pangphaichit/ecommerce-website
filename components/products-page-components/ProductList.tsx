@@ -48,7 +48,7 @@ export default function ProductList({
       <div className="w-full max-w-[93%] lg:max-w-[95%] mx-auto">
         <div className="flex flex-col items-center justify-center py-16 text-center">
 
-          <div className="relative w-25 h-25 mb-4 opacity-60">
+          <div className="relative w-22 h-22 mb-4 opacity-60">
 
             <Image
               src="/products/bakerybag.png"
