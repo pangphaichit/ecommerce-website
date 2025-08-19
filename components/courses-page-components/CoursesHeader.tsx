@@ -16,9 +16,11 @@ export default function CoursesHeader() {
         </h1>
 
         {/* Description */}
-        <p className="text-base lg:text-lg text-gray-600 lg:mb-10 max-w-3xl mx-auto leading-relaxed">
-          We provide expert-led, reliable courses both online and onsite to help
-          you master the craft of professional baking.
+        <p className="text-base lg:text-lg text-gray-600 lg:mb-10 max-w-4xl mx-auto leading-relaxed">
+          Whether you're discovering a new passion, building skills for your
+          future, or simply learning for the joy of it, we're here to guide you
+          every step of the way. With hands-on learning, inspiring mentors, and
+          a community that believes in you, your growth starts here.
         </p>
       </div>
     </div>
