@@ -6,52 +6,46 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import DaisyCheckbox from "@/components/ui/DaisyCheckbox";
 import FilterSection from "@/components/ui/FilterSection";
 
-interface Filters {
+export interface Filters {
   searchQuery: string;
-  priceRange: number;
   categories: number[];
-  ingredients: string[];
-  collections: string[];
-  occasionals: string[];
+  formats: string[];
+  difficultyLevels: string[];
 }
 
 interface FilterSidebarProps {
   categories: { category_id: number; name: string; category_slug: string }[];
-  ingredients: string[];
-  collections: string[];
-  occasionals: string[];
+  formats: string[];
+  difficultyLevels: string[];
   onFilterChange: (filters: Partial<Filters>) => void;
   onClearFilters: () => void;
   currentFilters: Filters;
   isLoading?: boolean;
 }
 
-export default function FilterSidebar({
+export default function FilterCourses({
   categories,
-  ingredients,
-  collections,
-  occasionals,
+  formats,
+  difficultyLevels,
   onFilterChange,
   currentFilters,
   isLoading = false,
   onClearFilters,
 }: FilterSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [priceRange, setPriceRange] = useState<number>(30);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
-  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
-  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
-  const [selectedOccasionals, setSelectedOccasionals] = useState<string[]>([]);
+  const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
+  const [selectedDifficultyLevels, setSelectedDifficultyLevels] = useState<
+    string[]
+  >([]);
   const [showFilters, setShowFilters] = useState(false);
 
   // Add clear filters handler
   const handleClearFilters = () => {
     setSearchQuery("");
-    setPriceRange(30);
     setSelectedCategories([]);
-    setSelectedIngredients([]);
-    setSelectedCollections([]);
-    setSelectedOccasionals([]);
+    setSelectedFormats([]);
+    setSelectedDifficultyLevels([]);
     if (onClearFilters) {
       onClearFilters();
     }
@@ -63,31 +57,20 @@ export default function FilterSidebar({
   // Initialize state from currentFilters
   useEffect(() => {
     setSearchQuery(currentFilters.searchQuery);
-    setPriceRange(currentFilters.priceRange);
     setSelectedCategories(currentFilters.categories);
-    setSelectedIngredients(currentFilters.ingredients);
-    setSelectedCollections(currentFilters.collections);
-    setSelectedOccasionals(currentFilters.occasionals);
+    setSelectedFormats(currentFilters.formats);
+    setSelectedDifficultyLevels(currentFilters.difficultyLevels);
   }, [currentFilters]);
 
-  // Helper function to get current filter state
+  // Helper function to get current filter state - FIXED: Return actual values, not setter functions
   const getCurrentFilters = useCallback(
     () => ({
       searchQuery,
-      priceRange,
       categories: selectedCategories,
-      ingredients: selectedIngredients,
-      collections: selectedCollections,
-      occasionals: selectedOccasionals,
+      formats: selectedFormats,
+      difficultyLevels: selectedDifficultyLevels,
     }),
-    [
-      searchQuery,
-      priceRange,
-      selectedCategories,
-      selectedIngredients,
-      selectedCollections,
-      selectedOccasionals,
-    ]
+    [searchQuery, selectedCategories, selectedFormats, selectedDifficultyLevels]
   );
 
   // Manual search trigger
@@ -146,32 +129,6 @@ export default function FilterSidebar({
     setSelectedCategories(newCategories);
   };
 
-  // Simplified ingredient toggle handler
-  const handleIngredientToggle = (ingredient: string) => {
-    const newIngredients =
-      selectedIngredients[0] === ingredient ? [] : [ingredient];
-    setSelectedIngredients(newIngredients);
-  };
-
-  // Simplified collection toggle handler
-  const handleCollectionToggle = (collection: string) => {
-    const newCollections =
-      selectedCollections[0] === collection ? [] : [collection];
-    setSelectedCollections(newCollections);
-  };
-
-  // Simplified occasional toggle handler
-  const handleOccasionalToggle = (occasional: string) => {
-    const newOccasionals =
-      selectedOccasionals[0] === occasional ? [] : [occasional];
-    setSelectedOccasionals(newOccasionals);
-  };
-
-  // Handle price range change with immediate effect
-  const handlePriceRangeChange = (newPrice: number) => {
-    setPriceRange(newPrice);
-  };
-
   // Cleanup debounce timer
   useEffect(() => {
     return () => {
@@ -182,12 +139,7 @@ export default function FilterSidebar({
   }, []);
 
   const isFiltering =
-    searchQuery.trim() !== "" ||
-    priceRange !== 30 ||
-    selectedCategories.length > 0 ||
-    selectedIngredients.length > 0 ||
-    selectedCollections.length > 0 ||
-    selectedOccasionals.length > 0;
+    searchQuery.trim() !== "" || selectedCategories.length > 0;
 
   return (
     <div className="w-full bg-white">
@@ -274,7 +226,7 @@ export default function FilterSidebar({
       `}</style>
 
       {/* Toggle Button for Mobile */}
-      <div className="p-4 lg:hidden">
+      <div className="py-4 lg:hidden">
         <Button
           variant="yellow"
           onClick={() => setShowFilters(!showFilters)}
@@ -287,7 +239,7 @@ export default function FilterSidebar({
       {/* Filters Container */}
       <div className={`lg:block ${showFilters ? "block" : "hidden"}`}>
         {/* Search Bar */}
-        <div className="relative flex flex-row items-center justify-center gap-2 px-4 lg:pl-8 lg:pr-0">
+        <div className="relative flex flex-row items-center justify-center gap-2 lg:px-4 lg:pl-8 lg:pr-0">
           <input
             type="text"
             placeholder="Search products..."
@@ -306,67 +258,41 @@ export default function FilterSidebar({
           </button>
         </div>
 
-        <div className="p-4 lg:pl-8 lg:pr-0">
+        <div className="py-4 lg:pl-8 lg:pr-0">
           {/* Filter Sections */}
-          <FilterSection title="Price">
-            <div className="space-y-4 mb-4">
-              {/* Price Range Slider */}
-              <div className="relative">
-                <input
-                  type="range"
-                  min={0}
-                  max={30}
-                  value={priceRange}
-                  onChange={(e) =>
-                    handlePriceRangeChange(Number(e.target.value))
-                  }
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                  style={{
-                    background: `linear-gradient(to right, #f59e0b 0%, #f59e0b ${
-                      (priceRange / 30) * 100
-                    }%, #e5e7eb ${(priceRange / 30) * 100}%, #e5e7eb 100%)`,
+          <FilterSection title="Format">
+            <div className="grid grid-cols-1 gap-1 mb-4">
+              {formats.map((format) => (
+                <DaisyCheckbox
+                  key={format}
+                  id={`format-${format}`}
+                  checked={selectedFormats.includes(format)}
+                  onChange={() => {
+                    const isSelected = selectedFormats.includes(format);
+                    setSelectedFormats(isSelected ? [] : [format]);
                   }}
-                />
-              </div>
-              {/* Price Display with Visual Feedback */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-gray-600">
-                    ${priceRange}
-                  </span>
-                  <span className="text-sm text-gray-500">maximum</span>
-                </div>
-                <div className="text-xs text-gray-400">$0 - $30 range</div>
-              </div>
-              {/* Quick Select Buttons */}
-              <div className="flex gap-2 flex-wrap w-full max-w-full">
-                {[5, 10, 15, 20, 25, 30].map((price) => (
-                  <button
-                    key={price}
-                    onClick={() => handlePriceRangeChange(price)}
-                    className={`px-3 py-1 text-xs rounded-full border transition-all duration-200 ${
-                      priceRange === price
-                        ? "bg-yellow-50 text-yellow-600 border border-yellow-200"
-                        : "bg-white text-gray-600 border-gray-300 hover:border-amber-300 hover:text-amber-600 cursor-pointer"
-                    }`}
-                  >
-                    ${price}
-                  </button>
-                ))}
-              </div>
-              {/* Value Indicator */}
-              <div className="bg-gray-50 rounded-lg p-3">
-                <div className="text-xs text-gray-500 mb-1">
-                  Current filter:
-                </div>
-                <div className="text-sm font-medium text-gray-700">
-                  {priceRange === 0
-                    ? "Free items only"
-                    : priceRange === 30
-                    ? "All prices"
-                    : `Items up to $${priceRange}`}
-                </div>
-              </div>
+                >
+                  {format}
+                </DaisyCheckbox>
+              ))}
+            </div>
+          </FilterSection>
+
+          <FilterSection title="Difficulty Level">
+            <div className="grid grid-cols-1 gap-1 mb-4">
+              {difficultyLevels.map((level) => (
+                <DaisyCheckbox
+                  key={level}
+                  id={`difficulty-${level}`}
+                  checked={selectedDifficultyLevels.includes(level)}
+                  onChange={() => {
+                    const isSelected = selectedDifficultyLevels.includes(level);
+                    setSelectedDifficultyLevels(isSelected ? [] : [level]);
+                  }}
+                >
+                  {level}
+                </DaisyCheckbox>
+              ))}
             </div>
           </FilterSection>
 
@@ -384,52 +310,6 @@ export default function FilterSidebar({
               ))}
             </div>
           </FilterSection>
-
-          <FilterSection title="Ingredients">
-            <div className="grid grid-cols-2 gap-1 mb-4">
-              {ingredients.map((ing) => (
-                <DaisyCheckbox
-                  key={ing}
-                  id={`ingredient-${ing}`}
-                  checked={selectedIngredients.includes(ing)}
-                  onChange={() => handleIngredientToggle(ing)}
-                >
-                  {ing}
-                </DaisyCheckbox>
-              ))}
-            </div>
-          </FilterSection>
-
-          <FilterSection title="Collection">
-            <div className="grid grid-cols-1 gap-1 mb-4">
-              {collections.map((col) => (
-                <DaisyCheckbox
-                  key={col}
-                  id={`collection-${col}`}
-                  checked={selectedCollections.includes(col)}
-                  onChange={() => handleCollectionToggle(col)}
-                >
-                  {col}
-                </DaisyCheckbox>
-              ))}
-            </div>
-          </FilterSection>
-
-          <FilterSection title="Occasional">
-            <div className="grid grid-cols-2 gap-1 mb-4">
-              {occasionals.map((occ) => (
-                <DaisyCheckbox
-                  key={occ}
-                  id={`occasional-${occ}`}
-                  checked={selectedOccasionals.includes(occ)}
-                  onChange={() => handleOccasionalToggle(occ)}
-                >
-                  {occ}
-                </DaisyCheckbox>
-              ))}
-            </div>
-          </FilterSection>
-
           {/* Manual Search Button */}
           <div className="mt-2">
             <Button

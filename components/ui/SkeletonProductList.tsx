@@ -18,7 +18,7 @@ export default function SkeletonProductList() {
 
   return (
     <div
-      className="w-full max-w-[93%] lg:max-w-[95%] mx-auto grid gap-4"
+      className="w-full max-w-[93%] lg:max-w-[95%] mx-auto grid gap-4 mb-4"
       style={{ gridTemplateColumns: `repeat(${itemsPerRow}, minmax(0, 1fr))` }}
     >
       {skeletonArray.map((_, idx) => (

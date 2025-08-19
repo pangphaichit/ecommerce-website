@@ -145,8 +145,8 @@ const ImageSlider = () => {
                 key={index}
                 className={`w-3 h-3 rounded-full cursor-pointer transition-colors ${
                   currentIndex === index
-                    ? "bg-yellow-600 pointer-events-none"
-                    : "bg-gray-300"
+                    ? "bg-blue-500 pointer-events-none"
+                    : "bg-white"
                 }`}
                 onClick={() => goToSlide(index)}
                 onMouseEnter={() => setAutoPlay(false)}
