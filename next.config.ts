@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       "ifqkafzvefjruoapkrdq.supabase.co",
       "api.dicebear.com",
       "randomuser.me",
+      "images.unsplash.com",
     ],
   },
 };

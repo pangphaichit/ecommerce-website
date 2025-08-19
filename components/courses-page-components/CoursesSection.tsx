@@ -49,28 +49,28 @@ const images = [
 const courseReviews = [
   {
     id: 1,
-    imageSrc: "https://randomuser.me/api/portraits/women/44.jpg",
+    imageSrc: "/courses/user-review-01.jpg",
     name: "Sarah Johnson",
     review:
       "Amazing baking course! I learned so much about bread making techniques.",
   },
   {
     id: 2,
-    imageSrc: "https://randomuser.me/api/portraits/men/32.jpg",
+    imageSrc: "/courses/user-review-02.jpg",
     name: "Mike Chen",
     review:
       "Perfect for beginners. The instructor was patient and very knowledgeable.",
   },
   {
     id: 3,
-    imageSrc: "https://randomuser.me/api/portraits/women/68.jpg",
+    imageSrc: "/courses/user-review-03.jpg",
     name: "Emma Davis",
     review:
       "Loved the hands-on approach. My pastry skills improved tremendously!",
   },
   {
     id: 4,
-    imageSrc: "https://randomuser.me/api/portraits/men/45.jpg",
+    imageSrc: "/courses/user-review-04.jpg",
     name: "John Smith",
     review:
       "The course exceeded my expectations. Clear instructions and great support.",
@@ -208,7 +208,7 @@ export default function CoursesSection() {
   };
 
   return (
-    <div className="flex flex-col gap-6 lg:mb-5">
+    <div className="flex flex-col gap-6 mb-4 lg:mb-5">
       <CoursesHeader />
 
       <CourseFeatures />
@@ -235,12 +235,13 @@ export default function CoursesSection() {
             title="Courses We Think You'll Love"
           />
         )}
-
-        <ReviewsCarousel reviews={courseReviews} />
       </div>
 
-      <div className="lg:mx-auto lg:w-[95%]">
+      <div className="flex flex-col  lg:mx-auto lg:w-[95%]">
         <CallToAction onExplore={handleClick} />
+      </div>
+      <div className="mx-4">
+        <ReviewsCarousel reviews={courseReviews} />
       </div>
     </div>
   );

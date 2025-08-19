@@ -11,14 +11,10 @@ interface CallToActionProps {
 
 export default function CallToAction({
   onExplore,
-  title = "Ready to Start Baking?",
-  description = `Whether you're discovering a new passion, building skills for your
-future, or simply learning for the joy of it, we're here to guide
-you every step of the way. With hands-on learning, inspiring
-mentors, and a community that believes in you, your growth starts
-here.`,
+  title = "Looking for something else?",
+  description = `Find the perfect baking course from our complete selection of bread, pastry, and oven techniques.`,
   imageSrc = "/courses/call-to-action-image.jpg",
-  buttonText = "Explore Courses",
+  buttonText = "Explore All Courses",
 }: CallToActionProps) {
   return (
     <div className="w-full flex justify-center">
@@ -40,7 +36,7 @@ here.`,
 
         {/* Content */}
         <div className="relative z-10 mx-auto text-center w-[80%]">
-          <h1 className="font-bold mb-4 text-2xl lg:text-3xl text-white">
+          <h1 className="font-bold mb-4 text-xl lg:text-3xl text-white">
             {title}
           </h1>
           <p className=" mb-6 text-base lg:text-[1.4rem] text-white">
