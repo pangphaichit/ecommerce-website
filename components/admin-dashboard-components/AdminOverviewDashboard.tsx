@@ -93,7 +93,7 @@ const recentOrdersData: OrderItem[] = [
   {
     id: "#ORD-1035",
     customer: "Alice Baker",
-    customerAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=JohnDoe",
+    customerAvatar: "https://randomuser.me/api/portraits/women/44.jpg",
     status: "Completed",
     statusColor: "success",
     amount: "$78.00",
@@ -102,7 +102,7 @@ const recentOrdersData: OrderItem[] = [
   {
     id: "#ORD-1034",
     customer: "Bob Crumb",
-    customerAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=JohnDoe",
+    customerAvatar: "https://randomuser.me/api/portraits/women/32.jpg",
     status: "Processing",
     statusColor: "warning",
     amount: "$35.50",
@@ -111,7 +111,7 @@ const recentOrdersData: OrderItem[] = [
   {
     id: "#ORD-1033",
     customer: "Cara Frost",
-    customerAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=JohnDoe",
+    customerAvatar: "https://randomuser.me/api/portraits/women/68.jpg",
     status: "Shipped",
     statusColor: "secondary",
     amount: "$59.99",
@@ -120,7 +120,7 @@ const recentOrdersData: OrderItem[] = [
   {
     id: "#ORD-1032",
     customer: "David Miller",
-    customerAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=JohnDoe",
+    customerAvatar: "https://randomuser.me/api/portraits/women/45.jpg",
     status: "Completed",
     statusColor: "success",
     amount: "$129.50",
@@ -129,7 +129,7 @@ const recentOrdersData: OrderItem[] = [
   {
     id: "#ORD-1031",
     customer: "Emma Wilson",
-    customerAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=JohnDoe",
+    customerAvatar: "https://randomuser.me/api/portraits/women/20.jpg",
     status: "Cancelled",
     statusColor: "warning",
     amount: "$89.99",
