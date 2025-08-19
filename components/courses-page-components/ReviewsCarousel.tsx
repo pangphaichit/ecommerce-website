@@ -40,7 +40,7 @@ export default function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
     setCurrentIndex((prev) => (prev - 1 + reviews.length) % reviews.length);
 
   return (
-    <div className="relative flex flex-col items-center mt-10  lg:mt-15 lg:mb-6">
+    <div className="relative flex flex-col items-center mt-10  lg:mt-12 lg:mb-6">
       <div className="flex gap-4 lg:gap-6 flex-wrap justify-center">
         {itemsPerPage === 1
           ? [reviews[currentIndex]].map((r) => (

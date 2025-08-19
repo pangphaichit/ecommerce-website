@@ -30,7 +30,8 @@ export default function ReviewsCourses({
           alt={`${name} profile`}
           width={85}
           height={85}
-          className="object-cover"
+          sizes="100%"
+          className="w-full h-full object-cover"
         />
       </div>
 
