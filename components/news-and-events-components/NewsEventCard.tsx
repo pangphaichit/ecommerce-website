@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import Button from "@/components/ui/Button";
+import SkeletonNewsEventGrid from "@/components/ui/SkeletonNewsEventGrid";
 
 interface SelectProps {
   name: string;
@@ -328,78 +329,82 @@ export default function NewsEventCard() {
       )}
 
       {/* Result Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-4 lg:mb-10">
-        {filteredData.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-gray-500">
-            <ChefHat size={65} className="mx-auto mb-4 text-yellow-600" />
-            <p className="text-lg font-medium mb-2">No results found</p>
-            <p>Try different keywords or browse all our latest updates!</p>
-          </div>
-        ) : (
-          filteredData.map((item, idx) => (
-            <article
-              key={idx}
-              className="relative bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-shadow duration-200 group overflow-hidden cursor-pointer"
-              onClick={() =>
-                console.log(`Navigate to /news-events/${item.slug}`)
-              }
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  console.log(`Navigate to /news-events/${item.slug}`);
+      {isLoading ? (
+        <SkeletonNewsEventGrid />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-4 lg:mb-10">
+          {filteredData.length === 0 ? (
+            <div className="col-span-full text-center py-12 text-gray-500">
+              <ChefHat size={65} className="mx-auto mb-4 text-yellow-600" />
+              <p className="text-lg font-medium mb-2">No results found</p>
+              <p>Try different keywords or browse all our latest updates!</p>
+            </div>
+          ) : (
+            filteredData.map((item, idx) => (
+              <article
+                key={idx}
+                className="relative bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-shadow duration-200 group overflow-hidden cursor-pointer"
+                onClick={() =>
+                  console.log(`Navigate to /news-events/${item.slug}`)
                 }
-              }}
-            >
-              <div className="relative">
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="absolute top-4 right-4">
-                  <span
-                    className={`inline-flex items-center px-2 py-1.25 rounded-full text-xs font-semibold shadow-sm backdrop-blur-sm ${getTypeColors(
-                      item.badge
-                    )} border border-white/20`}
-                  >
-                    {getTypeIcon(item.badge)}
-                    {item.badge === "course"
-                      ? "COURSE"
-                      : item.badge.toUpperCase()}
-                  </span>
-                </div>
-              </div>
-              <div className="px-6 pt-6 pb-9 space-y-5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[0.65rem] font-semibold text-gray-500 bg-gray-100 py-1.5 px-2 uppercase tracking-wide rounded-md">
-                    {item.Highlight}
-                  </span>
-                  <time className="text-xs text-gray-500 font-medium rounded-md">
-                    {formatDate(item.date)}
-                  </time>
-                </div>
-                <h3 className="text-lg font-bold text-yellow-700 line-clamp-2 leading-tight">
-                  {item.title}
-                </h3>
-                <p className="text-base text-gray-600 leading-relaxed line-clamp-3">
-                  {item.detail.length > 120
-                    ? item.detail.slice(0, 117) + "..."
-                    : item.detail}
-                </p>
-                <div className="absolute bottom-4 left-6">
-                  <div className="flex flex-row">
-                    <span className="flex hover:text-yellow-700 text-yellow-600 text-base font-medium hover:font-semibold cursor-pointer">
-                      Read more
-                      <ChevronRight size={25} />
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    console.log(`Navigate to /news-events/${item.slug}`);
+                  }
+                }}
+              >
+                <div className="relative">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="absolute top-4 right-4">
+                    <span
+                      className={`inline-flex items-center px-2 py-1.25 rounded-full text-xs font-semibold shadow-sm backdrop-blur-sm ${getTypeColors(
+                        item.badge
+                      )} border border-white/20`}
+                    >
+                      {getTypeIcon(item.badge)}
+                      {item.badge === "course"
+                        ? "COURSE"
+                        : item.badge.toUpperCase()}
                     </span>
                   </div>
                 </div>
-              </div>
-            </article>
-          ))
-        )}
-      </div>
+                <div className="px-6 pt-6 pb-9 space-y-5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[0.65rem] font-semibold text-gray-500 bg-gray-100 py-1.5 px-2 uppercase tracking-wide rounded-md">
+                      {item.Highlight}
+                    </span>
+                    <time className="text-xs text-gray-500 font-medium rounded-md">
+                      {formatDate(item.date)}
+                    </time>
+                  </div>
+                  <h3 className="text-lg font-bold text-yellow-700 line-clamp-2 leading-tight">
+                    {item.title}
+                  </h3>
+                  <p className="text-base text-gray-600 leading-relaxed line-clamp-3">
+                    {item.detail.length > 120
+                      ? item.detail.slice(0, 117) + "..."
+                      : item.detail}
+                  </p>
+                  <div className="absolute bottom-4 left-6">
+                    <div className="flex flex-row">
+                      <span className="flex hover:text-yellow-700 text-yellow-600 text-base font-medium hover:font-semibold cursor-pointer">
+                        Read more
+                        <ChevronRight size={25} />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

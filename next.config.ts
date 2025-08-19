@@ -4,7 +4,11 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
   images: {
-    domains: ["ifqkafzvefjruoapkrdq.supabase.co", "api.dicebear.com"],
+    domains: [
+      "ifqkafzvefjruoapkrdq.supabase.co",
+      "api.dicebear.com",
+      "randomuser.me",
+    ],
   },
 };
 
