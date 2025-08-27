@@ -27,19 +27,39 @@ export default async function handler(
 
     if (req.method === "GET") {
       try {
-        const query = `
-      SELECT products.*, categories.name AS category_name
-      FROM products
-      LEFT JOIN categories ON categories.category_id = products.category_id
-      WHERE products.slug = $1
-    `;
-        const result = await client.query(query, [slug]);
+        const productQuery = `
+          SELECT products.*, categories.name AS category_name
+          FROM products
+          LEFT JOIN categories ON categories.category_id = products.category_id
+          WHERE products.slug = $1
+        `;
 
-        if (result.rows.length === 0) {
+        const productResult = await client.query(productQuery, [slug]);
+
+        if (productResult.rows.length === 0) {
           return res.status(404).json({ error: "product not found" });
         }
 
-        return res.status(200).json({ data: result.rows[0] });
+        const product = productResult.rows[0];
+
+        // Second query - get product images
+        const imagesQuery = `
+          SELECT id, image_url, created_at
+          FROM product_images
+          WHERE product_id = $1
+          ORDER BY created_at ASC
+        `;
+
+        const imagesResult = await client.query(imagesQuery, [
+          product.product_id,
+        ]);
+
+        const productWithImages = {
+          ...product,
+          images: imagesResult.rows,
+        };
+
+        return res.status(200).json({ data: productWithImages });
       } catch (error) {
         console.error("error fetching product data:", error);
         return res.status(500).json({ error: "internal server error" });
