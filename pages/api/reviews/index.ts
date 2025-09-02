@@ -22,6 +22,8 @@ export default async function handler(
     const query = `
       SELECT 
         r.review_id,
+        r.product_id,
+        p.slug AS slug,
         r.rating,
         r.title,
         r.review_text,
@@ -34,8 +36,9 @@ export default async function handler(
       FROM reviews r
       LEFT JOIN review_supports rs ON r.review_id = rs.review_id
       JOIN users u ON r.user_id = u.user_id
+      JOIN products p ON r.product_id::text = p.product_id::text
       WHERE r.status = 'approved'
-      GROUP BY r.review_id, u.user_id
+      GROUP BY r.review_id, u.user_id, p.slug
       ORDER BY support_count DESC
       LIMIT 4;
     `;
@@ -44,6 +47,8 @@ export default async function handler(
 
     const formatted = result.rows.map((row) => ({
       review_id: row.review_id,
+      product_id: row.product_id,
+      product_slug: row.slug,
       rating: row.rating,
       title: row.title,
       review_text: row.review_text,

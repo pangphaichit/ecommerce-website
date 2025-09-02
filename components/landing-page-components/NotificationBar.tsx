@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { X } from "lucide-react";
 
 interface MessageWithIcon {
   image: string;
@@ -8,6 +9,9 @@ interface MessageWithIcon {
 }
 
 const NotificationBar = () => {
+  const [isClosed, setIsClosed] = useState(false);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState<number>(0);
+
   const messagesWithIcon: MessageWithIcon[] = [
     {
       image: "/landing-page/icon/free-delivery.png",
@@ -26,8 +30,6 @@ const NotificationBar = () => {
     },
   ];
 
-  const [currentMessageIndex, setCurrentMessageIndex] = useState<number>(0);
-
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentMessageIndex(
@@ -38,9 +40,11 @@ const NotificationBar = () => {
     return () => clearInterval(interval);
   }, [messagesWithIcon.length]);
 
+  if (isClosed) return null;
+
   return (
     <div
-      className={`text-xs w-full text-white ${messagesWithIcon[currentMessageIndex].backgroundColors} text-center z-50 py-2 lg:px-4 h-auto lg:text-sm flex items-center justify-center`}
+      className={`text-xs w-full relative text-white ${messagesWithIcon[currentMessageIndex].backgroundColors} text-center z-50 py-2 lg:px-4 h-auto lg:text-sm flex items-center justify-center`}
     >
       <Image
         src={messagesWithIcon[currentMessageIndex].image}
@@ -50,6 +54,12 @@ const NotificationBar = () => {
         height={27}
       />
       <p>{messagesWithIcon[currentMessageIndex].text}</p>
+      <button className="cursor-pointer absolute top-1.5 right-1 p-1">
+        <X
+          className="h-5 w-5 lg:h-6 lg:w-6"
+          onClick={() => setIsClosed(true)}
+        />
+      </button>
     </div>
   );
 };
