@@ -173,7 +173,7 @@ export default function ProductsCarousel({
                           className="w-full rounded-full text-xs"
                           disabled={!product.is_available}
                         >
-                          Add to Bag
+                          Add to Cart
                         </Button>
                         <Button variant="ghost" size="icon-sm">
                           <Heart className="text-yellow-500" />
