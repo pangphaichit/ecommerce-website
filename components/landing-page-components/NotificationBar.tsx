@@ -54,9 +54,9 @@ const NotificationBar = () => {
         height={27}
       />
       <p>{messagesWithIcon[currentMessageIndex].text}</p>
-      <button className="cursor-pointer">
+      <button className="cursor-pointer absolute top-1.5 right-1 p-1">
         <X
-          className="fixed top-2.5 right-2.5 h-5 w-5 lg:h-6 lg:w-6"
+          className="h-5 w-5 lg:h-6 lg:w-6"
           onClick={() => setIsClosed(true)}
         />
       </button>
