@@ -131,10 +131,14 @@ export default async function handler(
         .filter(Boolean);
 
       if (ingredientList.length > 0) {
+        // JSONB array contains any of the ingredients (case-insensitive)
         const ingredientConditions = ingredientList
           .map(
             (_, index) =>
-              `products.ingredients ILIKE $${filterParams.length + index + 1}`
+              `EXISTS (
+            SELECT 1 FROM jsonb_array_elements_text(products.key_ingredients) AS ki
+            WHERE ki ILIKE $${filterParams.length + index + 1}
+          )`
           )
           .join(" OR ");
         whereClause += ` AND (${ingredientConditions})`;

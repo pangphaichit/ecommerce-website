@@ -5,6 +5,7 @@ import { Home, ChevronRight } from "lucide-react";
 
 const Breadcrumbs = () => {
   const pathname = usePathname();
+  if (!pathname) return [];
 
   // Memoize the crumbs calculation to avoid recalculating on every render
   const crumbs = React.useMemo(() => {

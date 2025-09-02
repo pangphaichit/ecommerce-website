@@ -47,9 +47,7 @@ export default function ProductList({
     return (
       <div className="w-full max-w-[93%] lg:max-w-[95%] mx-auto">
         <div className="flex flex-col items-center justify-center py-16 text-center">
-
           <div className="relative w-22 h-22 mb-4 opacity-60">
-
             <Image
               src="/products/bakerybag.png"
               alt="No products found"
@@ -80,7 +78,7 @@ export default function ProductList({
       {validProducts.map((product) => (
         <div
           key={product.product_id}
-          className="group border border-gray-200 rounded-xl overflow-hidden relative cursor-pointer hover:shadow-lg transition-shadow duration-200"
+          className="cursor-pointer group border border-gray-200 rounded-xl overflow-hidden relative hover:shadow-lg transition-shadow duration-200"
           onClick={() => handleProductClick(product.slug)}
         >
           <div className="relative h-52 bg-gray-100">
