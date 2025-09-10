@@ -57,7 +57,7 @@ export default function YouMayAlsoLike({ products }: Props) {
   if (products.length === 0) return null;
 
   return (
-    <div className="w-full8">
+    <div className="w-full">
       <h2 className="text-xl lg:text-2xl font-bold text-yellow-600 mb-6 text-center">
         You May Also Like
       </h2>
