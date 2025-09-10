@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import NotificationBar from "@/components/landing-page-components/NotificationBar";
 import Navbar from "@/components/Navbar";
-import { useAuth } from "@/context/authentication";
+import { useAuth } from "@/context/AuthContext";
 
 const MyAccountPage = () => {
   const { userRole, logout, userId } = useAuth();
