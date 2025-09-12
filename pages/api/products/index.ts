@@ -98,7 +98,7 @@ export default async function handler(
           products.product_id::text ILIKE $${filterParams.length + 1} OR
           products.name ILIKE $${filterParams.length + 2} OR
           products.description ILIKE $${filterParams.length + 3} OR
-          products.ingredients ILIKE $${filterParams.length + 4} OR
+          products.ingredients::text ILIKE $${filterParams.length + 4} OR
           products.collection ILIKE $${filterParams.length + 5} OR
           categories.name ILIKE $${filterParams.length + 6} OR
           products.seasonal::text ILIKE $${filterParams.length + 7}
@@ -137,7 +137,7 @@ export default async function handler(
             (_, index) =>
               `EXISTS (
             SELECT 1 FROM jsonb_array_elements_text(products.key_ingredients) AS ki
-            WHERE ki ILIKE $${filterParams.length + index + 1}
+            WHERE ki::text ILIKE $${filterParams.length + index + 1}
           )`
           )
           .join(" OR ");
