@@ -26,6 +26,12 @@ export default function ProductSlugPageSection() {
   };
 
   useEffect(() => {
+    if (product) {
+      setQuantity(1);
+    }
+  }, [product]);
+
+  useEffect(() => {
     if (!router.isReady || !slug) return;
     const fetchProduct = async () => {
       try {

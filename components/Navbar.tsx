@@ -85,6 +85,10 @@ const Navbar = () => {
   const [isMobile, setIsMobile] = useState(false);
   const cartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+  const [swipedItem, setSwipedItem] = useState<string | null>(null);
+  const [swipeX, setSwipeX] = useState<number>(0);
+  const [startX, setStartX] = useState<number | null>(null);
+  const swipedRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -194,6 +198,23 @@ const Navbar = () => {
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        swipedRef.current &&
+        !swipedRef.current.contains(event.target as Node)
+      ) {
+        setSwipeX(0);
+        setSwipedItem(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [swipedRef]);
+
   const handleNavClick = (itemName: string) => {
     setActiveItem(itemName);
     setIsOpen(false);
@@ -239,6 +260,31 @@ const Navbar = () => {
     setIsCartDrawerOpen(false);
     router.push("/checkout");
   };
+
+  const handleTouchStart = (e: React.TouchEvent, id: string) => {
+    setStartX(e.touches[0].clientX);
+    setSwipedItem(id);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent, id: string) => {
+    if (startX === null || swipedItem !== id) return;
+
+    const deltaX = e.touches[0].clientX - startX;
+    if (deltaX < 0) {
+      setSwipeX(Math.max(deltaX, -100)); // limit left swipe
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (swipeX < -50) {
+      setSwipeX(-100);
+    } else {
+      setSwipeX(0);
+      setSwipedItem(null);
+    }
+    setStartX(null);
+  };
+
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -410,7 +456,10 @@ const Navbar = () => {
                     />
                   </label>
                   {cartItemCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-yellow-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium min-w-[20px] min-h-[20px]">
+                    <span
+                      className="absolute -top-2 -right-2 bg-yellow-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium min-w-[20px] min-h-[20px] cursor-pointer"
+                      onClick={handleCartClick}
+                    >
                       {cartItemCount > 99 ? "99+" : cartItemCount}
                     </span>
                   )}
@@ -766,14 +815,14 @@ const Navbar = () => {
 
       {/* Drawer Side Panel */}
       <div
-        className={`drawer-side fixed top-0 right-0 h-screen transition-transform duration-300 ease-in-out z-50 w-full lg:w-[500px] ${
+        className={`drawer-side fixed top-0 right-0 transition-transform duration-300 ease-in-out z-50 w-screen h-screen lg:w-[450px] ${
           isCartDrawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="min-h-full  bg-white p-6 shadow-xl">
+        <div className="h-full w-full bg-white  shadow-xl">
           {/* Drawer Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Shopping Cart</h2>
+          <div className="flex items-center justify-between mb-6 pl-4 pr-3 py-4">
+            <h2 className="text-xl font-bold text-gray-800">My Cart</h2>
             <label htmlFor="cart-drawer" className="">
               <X
                 size={20}
@@ -786,66 +835,129 @@ const Navbar = () => {
           {/* Cart Items */}
           <div className="flex-1 overflow-y-auto">
             {cart.length === 0 ? (
-              <div className="text-center py-8">
-                <ShoppingCart
-                  size={48}
-                  className="mx-auto text-gray-300 mb-4"
-                />
-                <p className="text-gray-500 mb-4">Your cart is empty</p>
-                <label htmlFor="cart-drawer" className="">
-                  Continue Shopping
+              <div className="text-center py-8 flex flex-col gap-2 px-7">
+                <ShoppingCart size={48} className="mx-auto text-gray-300" />
+                <p className="text-gray-500 text-lg font-semibold">
+                  Your cart is empty.
+                </p>
+                <label htmlFor="cart-drawer" className="text-gray-400 text-sm">
+                  Log in to see your saved items or continue shopping.
                 </label>
+                <Button
+                  variant="yellow"
+                  className="rounded-full py-5 mt-4 text-base"
+                  onClick={() => setIsCartDrawerOpen(false)}
+                >
+                  Continue Shopping
+                </Button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div>
                 {cart.map((item) => (
                   <div
                     key={item.product_id}
-                    className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg"
+                    className="relative w-full mb-4 overflow-hidden"
                   >
-                    <Image
-                      src={item.image_url || "/placeholder.png"}
-                      alt={item.name}
-                      width={60}
-                      height={60}
-                      className="object-cover rounded"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 text-sm">
-                        {item.name}
-                      </h3>
-                      <p className="text-yellow-600 font-semibold">
-                        ${item.price}
-                      </p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <button
-                          onClick={() =>
-                            updateQuantity(
-                              item.product_id,
-                              Math.max(0, item.quantity - 1)
-                            )
-                          }
-                          className=""
+                    {/* Red background */}
+                    <div className="absolute top-0 right-0 bottom-0 left-0  flex flex-row justify-end items-center z-0">
+                      <div className="bg-white"></div>
+                      <div
+                        className=" bg-red-600 h-24 w-25 pl-2 flex justify-center items-center"
+                        ref={swipedRef}
+                        onClick={() => removeFromCart(item.product_id)}
+                      >
+                        <Trash2
+                          size={20}
+                          className="text-white"
+                          style={{
+                            transform:
+                              swipedItem === item.product_id
+                                ? `translateX(${swipeX / 22}px)`
+                                : "translateX(0)",
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div
+                      key={item.product_id}
+                      className="flex items-center gap-3 z-10 relative bg-white h-25"
+                      onTouchStart={(e) => handleTouchStart(e, item.product_id)}
+                      onTouchMove={(e) => handleTouchMove(e, item.product_id)}
+                      onTouchEnd={handleTouchEnd}
+                      style={{
+                        transform:
+                          swipedItem === item.product_id
+                            ? `translateX(${swipeX}px)`
+                            : "translateX(0)",
+                        transition:
+                          "transform 0.3s cubic-bezier(0.25, 1.5, 0.5, 1)",
+                      }}
+                    >
+                      <div className="w-20 h-24 flex-shrink-0 overflow-hidden ml-4">
+                        <Image
+                          src={item.image_url || "/placeholder.png"}
+                          alt={item.name}
+                          width={60}
+                          height={60}
+                          className="object-cover  w-full h-full"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <Link
+                          href={`/products/${item.slug}`}
+                          className="block w-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsCartDrawerOpen(false);
+                          }}
                         >
-                          <Minus size={12} />
-                        </button>
-                        <span className="text-sm font-medium w-8 text-center">
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={() =>
-                            updateQuantity(item.product_id, item.quantity + 1)
-                          }
-                          className=""
-                        >
-                          <Plus size={12} />
-                        </button>
-                        <button
-                          onClick={() => removeFromCart(item.product_id)}
-                          className="ml-2"
-                        >
-                          <Trash2 size={12} />
-                        </button>
+                          <h3 className="font-semibold text-gray-900 text-sm mb-1 hover:text-yellow-600">
+                            {item.name}
+                          </h3>
+                        </Link>
+                        <p className="text-green-600 text-sm font-semibold">
+                          ${((item.price || 0) * item.quantity).toFixed(2)}
+                        </p>
+                        <div className="flex justify-between items-center gap-2 mt-2">
+                          <div className="flex flex-row gap-2">
+                            <Button
+                              variant="neutral"
+                              onClick={() =>
+                                updateQuantity(
+                                  item.product_id,
+                                  Math.max(0, item.quantity - 1)
+                                )
+                              }
+                              className="p-3 rounded-full"
+                            >
+                              <Minus size={12} />
+                            </Button>
+                            <span className="flex justify-center text-sm font-medium w-4 text-center items-center">
+                              {item.quantity}
+                            </span>
+                            <Button
+                              variant="neutral"
+                              onClick={() =>
+                                updateQuantity(
+                                  item.product_id,
+                                  item.quantity + 1
+                                )
+                              }
+                              className="p-3 rounded-full"
+                            >
+                              <Plus size={12} />
+                            </Button>
+                          </div>
+                          <button
+                            onClick={() => removeFromCart(item.product_id)}
+                            className="ml-2"
+                          >
+                            <Trash2
+                              size={18}
+                              className="text-gray-500 mr-2 hidden lg:block hover:text-red-600"
+                            />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -856,19 +968,28 @@ const Navbar = () => {
 
           {/* Cart Footer */}
           {cart.length > 0 && (
-            <div className="border-t pt-4 mt-6">
+            <div className="pt-4 mt-6 px-4">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-lg font-semibold">Total:</span>
                 <span className="text-xl font-bold text-yellow-600">
-                  ${getCartTotal()}
+                  ${getCartTotal().toFixed(2)}
                 </span>
               </div>
-              <button
-                onClick={handleCheckout}
-                className="w-full bg-yellow-600 hover:bg-yellow-700 border-yellow-600"
-              >
-                Checkout
-              </button>
+              <div className="flex flex-col gap-4 mt-4">
+                <Button
+                  variant="lightyellow"
+                  onClick={() => setIsCartDrawerOpen(false)}
+                  className="w-full rounded-full"
+                >
+                  Continue Shopping
+                </Button>
+                <Button
+                  onClick={handleCheckout}
+                  className="w-full rounded-full"
+                >
+                  Checkout
+                </Button>
+              </div>
             </div>
           )}
         </div>

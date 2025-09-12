@@ -1,3 +1,4 @@
+import { useCart } from "@/context/CartContext";
 import { Heart, Store, Truck, Star, Minus, Plus } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
@@ -9,8 +10,13 @@ interface Props {
 }
 
 export default function ProductInfo({ product, quantity, setQuantity }: Props) {
+  const { addToCart } = useCart();
   const increment = () => setQuantity(quantity + 1);
   const decrement = () => setQuantity(Math.max(1, quantity - 1));
+
+  const handleAddToCart = () => {
+    addToCart(product, quantity);
+  };
 
   return (
     <div className="lg:w-[50%]">
@@ -38,17 +44,26 @@ export default function ProductInfo({ product, quantity, setQuantity }: Props) {
         {/* Quantity + Price */}
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
-            <Button variant="lightyellow" className="rounded-full p-3">
-              <Minus size={15} onClick={decrement} />
+            <Button
+              variant="lightyellow"
+              className="rounded-full p-3"
+              onClick={decrement}
+            >
+              <Minus size={15} />
             </Button>
             <input
               type="text"
               value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
               className="w-12 text-center border border-gray-300"
               readOnly
             />
-            <Button variant="lightyellow" className="rounded-full p-3">
-              <Plus size={15} onClick={increment} />
+            <Button
+              variant="lightyellow"
+              className="rounded-full p-3"
+              onClick={increment}
+            >
+              <Plus size={15} />
             </Button>
           </div>
           <p className="text-xl font-semibold text-green-600">
@@ -60,6 +75,7 @@ export default function ProductInfo({ product, quantity, setQuantity }: Props) {
         <Button
           variant={product.is_available ? "yellow" : "secondary"}
           className="w-full py-6 rounded-full"
+          onClick={handleAddToCart}
         >
           {product.is_available ? "Add to Cart" : "Notify Me"}
         </Button>
