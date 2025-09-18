@@ -258,7 +258,7 @@ const Navbar = () => {
 
   const handleCheckout = () => {
     setIsCartDrawerOpen(false);
-    router.push("/checkout");
+    router.push("/customer/my-account/cart");
   };
 
   const handleTouchStart = (e: React.TouchEvent, id: string) => {
@@ -823,7 +823,7 @@ const Navbar = () => {
           {/* Drawer Header */}
           <div className="flex items-center justify-between mb-6 pl-4 pr-3 py-4">
             <h2 className="text-xl font-bold text-gray-800">My Cart</h2>
-            <label htmlFor="cart-drawer" className="">
+            <label htmlFor="cart-drawer">
               <X
                 size={20}
                 onClick={() => setIsCartDrawerOpen(false)}
@@ -895,7 +895,7 @@ const Navbar = () => {
                     >
                       <div className="w-20 h-24 flex-shrink-0 overflow-hidden ml-4">
                         <Image
-                          src={item.image_url || "/placeholder.png"}
+                          src={item.image_url}
                           alt={item.name}
                           width={60}
                           height={60}
@@ -911,50 +911,49 @@ const Navbar = () => {
                             setIsCartDrawerOpen(false);
                           }}
                         >
-                          <h3 className="font-semibold text-gray-900 text-sm mb-1 hover:text-yellow-600">
+                          <h3 className="font-semibold text-gray-900 text-sm lg:text-base mb-1 hover:text-yellow-600">
                             {item.name}
                           </h3>
                         </Link>
-                        <p className="text-green-600 text-sm font-semibold">
+                        <p className="text-green-600 text-base font-semibold">
                           ${((item.price || 0) * item.quantity).toFixed(2)}
                         </p>
                         <div className="flex justify-between items-center gap-2 mt-2">
                           <div className="flex flex-row gap-2">
-                            <Button
-                              variant="neutral"
+                            <button
                               onClick={() =>
                                 updateQuantity(
                                   item.product_id,
                                   Math.max(0, item.quantity - 1)
                                 )
                               }
-                              className="p-3 rounded-full"
+                              className="p-3 rounded-full text-gray-700 border-none  hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
                             >
-                              <Minus size={12} />
-                            </Button>
-                            <span className="flex justify-center text-sm font-medium w-4 text-center items-center">
+                              <Minus size={15} />
+                            </button>
+                            <span className="flex justify-center text-sm font-medium w-4 text-center items-center text-gray-700">
                               {item.quantity}
                             </span>
-                            <Button
-                              variant="neutral"
+                            <button
                               onClick={() =>
                                 updateQuantity(
                                   item.product_id,
                                   item.quantity + 1
                                 )
                               }
-                              className="p-3 rounded-full"
+                              className="p-3 rounded-full text-gray-700 border-none hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
                             >
-                              <Plus size={12} />
-                            </Button>
+                              <Plus size={15} />
+                            </button>
                           </div>
                           <button
                             onClick={() => removeFromCart(item.product_id)}
-                            className="ml-2"
+                            className="ml-2 p-2 rounded-full hover:bg-gray-200 transition-colors duration-200 mr-4  cursor-pointer"
+                            aria-label="Remove from cart"
                           >
                             <Trash2
                               size={18}
-                              className="text-gray-500 mr-2 hidden lg:block hover:text-red-600"
+                              className="hidden lg:block text-gray-500"
                             />
                           </button>
                         </div>
@@ -968,7 +967,7 @@ const Navbar = () => {
 
           {/* Cart Footer */}
           {cart.length > 0 && (
-            <div className="pt-4 mt-6 px-4">
+            <div className="pt-4 px-4">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-lg font-semibold">Total:</span>
                 <span className="text-xl font-bold text-yellow-600">
@@ -977,17 +976,17 @@ const Navbar = () => {
               </div>
               <div className="flex flex-col gap-4 mt-4">
                 <Button
+                  onClick={handleCheckout}
+                  className="w-full rounded-full"
+                >
+                  Checkout
+                </Button>
+                <Button
                   variant="lightyellow"
                   onClick={() => setIsCartDrawerOpen(false)}
                   className="w-full rounded-full"
                 >
                   Continue Shopping
-                </Button>
-                <Button
-                  onClick={handleCheckout}
-                  className="w-full rounded-full"
-                >
-                  Checkout
                 </Button>
               </div>
             </div>

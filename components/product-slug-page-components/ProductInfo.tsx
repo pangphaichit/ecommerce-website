@@ -1,21 +1,33 @@
+import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { Heart, Store, Truck, Star, Minus, Plus } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
+import AddToCartDialog from "@/components/product-slug-page-components/AddToCartDialog";
 
 interface Props {
   product: any;
   quantity: number;
   setQuantity: (q: number) => void;
+  price: number;
 }
 
 export default function ProductInfo({ product, quantity, setQuantity }: Props) {
   const { addToCart } = useCart();
+  const [showDialog, setShowDialog] = useState(false);
   const increment = () => setQuantity(quantity + 1);
   const decrement = () => setQuantity(Math.max(1, quantity - 1));
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
+    if (product.is_available) {
+      addToCart(product, quantity);
+      setShowDialog(true);
+
+      // Auto-close dialog after 5 seconds
+      setTimeout(() => {
+        setShowDialog(false);
+      }, 3000);
+    }
   };
 
   return (
@@ -102,6 +114,15 @@ export default function ProductInfo({ product, quantity, setQuantity }: Props) {
           </div>
         </div>
       </div>
+      {/* the dialog component */}
+      <AddToCartDialog
+        isOpen={showDialog}
+        onClose={() => setShowDialog(false)}
+        productName={product.name}
+        productImage={product.image_url}
+        quantity={quantity}
+        price={Number(product.price ?? 0)}
+      />
     </div>
   );
 }

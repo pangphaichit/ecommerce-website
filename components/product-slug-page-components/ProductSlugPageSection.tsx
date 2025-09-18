@@ -80,6 +80,7 @@ export default function ProductSlugPageSection() {
           product={product}
           quantity={quantity}
           setQuantity={setQuantity}
+          price={product.price}
         />
       </div>
       <ProductTabs
