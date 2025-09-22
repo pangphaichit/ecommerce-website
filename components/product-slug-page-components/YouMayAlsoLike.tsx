@@ -6,35 +6,16 @@ import {
   Heart,
   ChevronLeft,
   ChevronRight,
-  Minus,
-  Plus,
-  X,
-  ShoppingCart,
-  ChevronUp,
-  ChevronDown,
   Wheat,
   Milk,
   Bean,
   Egg,
-  Circle,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
+import DrawerPanel from "@/components/DrawerPanel";
 import AddToCartDialog from "@/components/product-slug-page-components/AddToCartDialog";
-
-interface Product {
-  product_id: string;
-  name: string;
-  description: string;
-  price: string | number;
-  is_available: boolean;
-  image_url: string;
-  slug: string;
-  key_features: string[]; // array
-  allergens: string[]; // array
-  ingredients?: string[];
-  nutritional_info?: string;
-}
+import { Product } from "@/types/products";
 
 interface Props {
   products: Product[];
@@ -49,19 +30,6 @@ export default function YouMayAlsoLike({ products }: Props) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState("Key Features");
-
-  const tabContent: Record<string, string | string[]> = {
-    "Key Features": selectedProduct?.key_features?.length
-      ? selectedProduct.key_features
-      : ["This product has amazing key features!"],
-    Ingredients: selectedProduct?.ingredients?.length
-      ? selectedProduct.ingredients
-      : ["Ingredients data coming soon..."],
-    Allergens: selectedProduct?.allergens?.length
-      ? selectedProduct.allergens
-      : ["Allergen information will be available later."],
-  };
 
   const allergenIcons = {
     Nuts: <Bean size={16} className="text-yellow-600" />,
@@ -79,6 +47,20 @@ export default function YouMayAlsoLike({ products }: Props) {
     window.addEventListener("resize", updateItemsPerPage);
     return () => window.removeEventListener("resize", updateItemsPerPage);
   }, []);
+
+  useEffect(() => {
+    if (isDrawerOpen) {
+      // Lock scroll
+      document.body.style.overflow = "hidden";
+    } else {
+      // Restore scroll
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isDrawerOpen]);
 
   const totalPages = Math.ceil(products.length / itemsPerPage);
 
@@ -260,201 +242,19 @@ export default function YouMayAlsoLike({ products }: Props) {
 
       {/* Drawer Panel */}
       {selectedProduct && (
-        <div
-          className={`drawer-side fixed z-50 bg-white transition-transform duration-300 ease-in-out
-bottom-0 left-0 right-0 h-[80%] 
-lg:top-0 lg:right-0 lg:h-full lg:w-[450px] lg:left-auto
-${
-  isDrawerOpen
-    ? "translate-y-0 lg:translate-y-0 lg:translate-x-0"
-    : "translate-y-full lg:translate-y-0 lg:translate-x-full"
-}`}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-800">Quick Purchase</h2>
-            <label htmlFor="cart-drawer">
-              <button
-                onClick={() => {
-                  setIsDrawerOpen(false);
-                  setSelectedProduct(null);
-                }}
-                className="p-1"
-              >
-                <X size={20} className="cursor-pointer hover:text-yellow-600" />
-              </button>
-            </label>
-          </div>
-
-          {/* Content */}
-          <div className="flex flex-col h-full overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-4">
-              {/* Product Image and Info */}
-              <div className="flex gap-4 mb-6">
-                <div className="w-24 h-24 flex-shrink-0 overflow-hidden rounded-lg">
-                  <Image
-                    src={selectedProduct.image_url || "/placeholder.png"}
-                    alt={selectedProduct.name}
-                    width={96}
-                    height={96}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg text-gray-900 mb-2">
-                    {selectedProduct.name}
-                  </h3>
-                  <p className="text-2xl font-bold text-green-600">
-                    $
-                    {(
-                      Number(selectedProduct.price) * Number(selectedQuantity)
-                    ).toFixed(2)}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    $
-                    {typeof selectedProduct.price === "number"
-                      ? selectedProduct.price.toFixed(2)
-                      : Number(selectedProduct.price).toFixed(2)}{" "}
-                    each
-                  </p>
-                </div>
-              </div>
-
-              {/* Quantity Selector */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quantity
-                </label>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() =>
-                      setSelectedQuantity(Math.max(1, selectedQuantity - 1))
-                    }
-                    className="p-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors"
-                  >
-                    <Minus size={15} />
-                  </button>
-                  <span className="text-lg font-semibold w-8 text-center">
-                    {selectedQuantity}
-                  </span>
-                  <button
-                    onClick={() => setSelectedQuantity(selectedQuantity + 1)}
-                    className="p-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors"
-                  >
-                    <Plus size={15} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Accordion */}
-              <div className="flex flex-col gap-2">
-                {["Key Features", "Ingredients", "Allergens"].map((tab) => (
-                  <div key={tab} className="overflow-hidden">
-                    <div
-                      className={`flex justify-between items-center p-3 cursor-pointer group border-b-3 transition-colors duration-200 ${
-                        activeTab === tab
-                          ? "border-yellow-600"
-                          : "border-transparent"
-                      }`}
-                      onClick={() => setActiveTab(activeTab === tab ? "" : tab)}
-                    >
-                      <span
-                        className={`font-bold transition-colors duration-200 ${
-                          activeTab === tab
-                            ? "font-bold"
-                            : "group-hover:text-yellow-600 font-semibold"
-                        }`}
-                      >
-                        {tab}
-                      </span>
-                      {activeTab === tab ? (
-                        <ChevronUp size={18} />
-                      ) : (
-                        <ChevronDown size={18} />
-                      )}
-                    </div>
-
-                    <div
-                      className={`p-4 text-sm ${
-                        activeTab === tab ? "block" : "hidden"
-                      }`}
-                    >
-                      {tab === "Key Features" &&
-                      selectedProduct.key_features ? (
-                        <ul className="list-disc pl-6 space-y-1">
-                          {selectedProduct.key_features.map(
-                            (feature: string, idx: number) => (
-                              <li key={idx}>{feature}</li>
-                            )
-                          )}
-                        </ul>
-                      ) : tab === "Ingredients" &&
-                        selectedProduct.ingredients ? (
-                        <div className="flex flex-col gap-4">
-                          <div className="flex flex-row flex-wrap items-center">
-                            <span className="font-semibold text-yellow-700">
-                              Ingredients:&nbsp;
-                              <span className="font-normal text-black">
-                                {selectedProduct.ingredients.join(", ")}
-                              </span>
-                            </span>
-                          </div>
-                          <div className="flex flex-row">
-                            <span className="font-semibold text-yellow-700">
-                              Nutritional Information:&nbsp;
-                            </span>
-                            <p>{selectedProduct.nutritional_info}</p>
-                          </div>
-                        </div>
-                      ) : tab === "Allergens" && selectedProduct.allergens ? (
-                        <div className="flex flex-wrap gap-4 justify-center">
-                          {selectedProduct.allergens.map(
-                            (a: string, i: number) => (
-                              <div
-                                key={i}
-                                className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full"
-                              >
-                                {allergenIcons[
-                                  a as keyof typeof allergenIcons
-                                ] || (
-                                  <Circle size={16} className="text-gray-400" />
-                                )}
-
-                                <span className="capitalize">{a}</span>
-                              </div>
-                            )
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-gray-700">
-                          {tabContent?.[tab] || "No information available"}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Footer Action */}
-            <div className="p-4 border-t border-gray-200 bg-white fixed left-0 bottom-0 w-full">
-              <Button
-                onClick={() => {
-                  if (selectedProduct) {
-                    handleAddToCartFromDrawer(
-                      selectedProduct,
-                      selectedQuantity
-                    );
-                  }
-                }}
-                variant="yellow"
-                className="w-full py-3 text-base font-semibold flex items-center justify-center"
-              >
-                <ShoppingCart size={18} className="mr-2" />
-                Add to Cart
-              </Button>
-            </div>
-          </div>
-        </div>
+        <DrawerPanel
+          selectedProduct={selectedProduct}
+          isDrawerOpen={isDrawerOpen}
+          setIsDrawerOpen={setIsDrawerOpen}
+          selectedQuantity={selectedQuantity}
+          setSelectedQuantity={setSelectedQuantity}
+          handleAddToCartFromDrawer={handleAddToCartFromDrawer}
+          allergenIcons={allergenIcons}
+          tabContent={{
+            Ingredients: "No ingredients info",
+            Allergens: "No allergens info",
+          }}
+        />
       )}
 
       {selectedProduct && (

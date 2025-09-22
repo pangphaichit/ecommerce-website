@@ -215,6 +215,20 @@ const Navbar = () => {
     };
   }, [swipedRef]);
 
+  useEffect(() => {
+    if (isCartDrawerOpen) {
+      // Lock scroll
+      document.body.style.overflow = "hidden";
+    } else {
+      // Restore scroll
+      document.body.style.overflow = "";
+    }
+    // Cleanup when component unmounts
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isCartDrawerOpen]);
+
   const handleNavClick = (itemName: string) => {
     setActiveItem(itemName);
     setIsOpen(false);
@@ -258,7 +272,16 @@ const Navbar = () => {
 
   const handleCheckout = () => {
     setIsCartDrawerOpen(false);
-    router.push("/customer/my-account/cart");
+    router.push(
+      isAuthenticated ? "/customer/my-account/checkout" : "/customer/checkout"
+    );
+  };
+
+  const handleViewMyCart = () => {
+    setIsCartDrawerOpen(false);
+    router.push(
+      isAuthenticated ? "/customer/my-account/cart" : "/customer/cart"
+    );
   };
 
   const handleTouchStart = (e: React.TouchEvent, id: string) => {
@@ -819,7 +842,7 @@ const Navbar = () => {
           isCartDrawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="h-full w-full bg-white  shadow-xl">
+        <div className="h-full w-full bg-white shadow-xl flex flex-col">
           {/* Drawer Header */}
           <div className="flex items-center justify-between mb-6 pl-4 pr-3 py-4">
             <h2 className="text-xl font-bold text-gray-800">My Cart</h2>
@@ -967,26 +990,27 @@ const Navbar = () => {
 
           {/* Cart Footer */}
           {cart.length > 0 && (
-            <div className="pt-4 px-4">
+            <div className="pt-4 px-4 mb-4">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-lg font-semibold">Total:</span>
                 <span className="text-xl font-bold text-yellow-600">
                   ${getCartTotal().toFixed(2)}
                 </span>
               </div>
+
               <div className="flex flex-col gap-4 mt-4">
+                <Button
+                  variant="lightyellow"
+                  onClick={handleViewMyCart}
+                  className="w-full rounded-full"
+                >
+                  View My Cart
+                </Button>
                 <Button
                   onClick={handleCheckout}
                   className="w-full rounded-full"
                 >
                   Checkout
-                </Button>
-                <Button
-                  variant="lightyellow"
-                  onClick={() => setIsCartDrawerOpen(false)}
-                  className="w-full rounded-full"
-                >
-                  Continue Shopping
                 </Button>
               </div>
             </div>

@@ -1,20 +1,24 @@
-import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
-import NotificationBar from "@/components/landing-page-components/NotificationBar";
-import Navbar from "@/components/Navbar";
-import { useAuth } from "@/context/AuthContext";
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import NotificationBar from "@/components/landing-page-components/NotificationBar";
+import Navbar from "@/components/Navbar";
 import Button from "@/components/ui/Button";
-import { ShoppingCart, Minus, Plus, Trash2 } from "lucide-react";
+import {
+  Menu,
+  X,
+  Search,
+  Heart,
+  User,
+  ShoppingCart,
+  Minus,
+  Plus,
+  Trash2,
+} from "lucide-react";
 
-const CartPage = () => {
-  const { userRole, logout, userId } = useAuth();
-  const [userName, setUserName] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+const GuestCartPage = () => {
   const router = useRouter();
   const { cart, getItemCount, updateQuantity, removeFromCart, getCartTotal } =
     useCart();
@@ -47,39 +51,12 @@ const CartPage = () => {
     setStartX(null);
   };
 
-  const handleLogout = () => {
-    logout();
-  };
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const res = await axios.get(`/api/customer/${userId}`);
-        setUserName(res.data.data?.first_name);
-        setLoading(false);
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-          setError(err.response?.data?.message || "Failed to fetch user data");
-        } else if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("An unknown error occurred");
-        }
-        setLoading(false);
-      }
-    };
-
-    if (userId) {
-      fetchUserData();
-    }
-  }, [userId]);
-
   return (
     <div>
       <NotificationBar />
       <Navbar />
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-semibold mb-4">Cart Page</h1>
+        <h1 className="text-2xl font-semibold mb-4">Guest Cart Page</h1>
         {/* Cart Items */}
         <div className="flex-1 overflow-y-auto">
           {cart.length === 0 ? (
@@ -222,4 +199,4 @@ const CartPage = () => {
   );
 };
 
-export default CartPage;
+export default GuestCartPage;
