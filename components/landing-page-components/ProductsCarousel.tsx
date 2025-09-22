@@ -1,29 +1,21 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
+import { useCart } from "@/context/CartContext";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  Wheat,
+  Milk,
+  Bean,
+  Egg,
+} from "lucide-react";
+import DrawerPanel from "@/components/DrawerPanel";
+import AddToCartDialog from "@/components/product-slug-page-components/AddToCartDialog";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import { useRouter } from "next/router";
-
-interface Product {
-  product_id: string;
-  name: string;
-  description: string;
-  price: number | null;
-  is_available: boolean;
-  category_id: number | null;
-  size: string;
-  ingredients: string;
-  allergens: string;
-  nutritional_info: string;
-  seasonal: string;
-  collection: string;
-  stock_quantity: number;
-  min_order_quantity: number;
-  image_url: string;
-  slug: string;
-  image_file?: File;
-}
+import { Product } from "@/types/products";
 
 export default function ProductsCarousel({
   products,
@@ -31,12 +23,31 @@ export default function ProductsCarousel({
   products: Product[];
 }) {
   const router = useRouter();
+  const { addToCart } = useCart();
+
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedQuantity, setSelectedQuantity] = useState(1);
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+  const [showDialog, setShowDialog] = useState(false);
 
   // Track current index of carousel start
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // rack how many items to show per page (responsive)
   const [itemsPerPage, setItemsPerPage] = useState(1);
+  useEffect(() => {
+    if (isDrawerOpen) {
+      // Lock scroll
+      document.body.style.overflow = "hidden";
+    } else {
+      // Restore scroll
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isDrawerOpen]);
 
   // Set itemsPerPage based on window width (mobile=1, desktop=4)
   useEffect(() => {
@@ -79,9 +90,48 @@ export default function ProductsCarousel({
     router.push(`/products/${slug}`);
   };
 
+  const openQuickPurchase = (product: Product) => {
+    if (!product.is_available) return;
+    setSelectedProduct(product);
+    setSelectedQuantity(1); // reset quantity
+    setIsDrawerOpen(true);
+  };
+
+  const handleAddToCartFromDrawer = (product: Product, quantity: number) => {
+    addToCart({ ...product, price: Number(product.price) }, quantity);
+    setSelectedProduct(product); // keep the product for the dialog
+    setIsDrawerOpen(false);
+    setShowDialog(true);
+    setTimeout(() => {
+      setShowDialog(false);
+    }, 3000);
+  };
+
+  const allergenIcons = {
+    Nuts: <Bean size={16} className="text-yellow-600" />,
+    Gluten: <Wheat size={16} className="text-yellow-600" />,
+    Eggs: <Egg size={16} className="text-yellow-600" />,
+    Dairy: <Milk size={16} className="text-yellow-600" />,
+  };
+
   return (
-    <div className="relative w-full max-w-[93%] lg:max-w-[95%] mx-auto">
-      <div className="relative">
+    <div className="relative w-full max-w-[93%] lg:max-w-[95%] mx-auto  drawer drawer-end">
+      {/* Drawer toggle input */}
+      <input
+        id="cart-drawer"
+        type="checkbox"
+        className="drawer-toggle hidden"
+      />
+      {isDrawerOpen && (
+        <label
+          htmlFor="cart-drawer"
+          className="drawer-overlay fixed top-0 left-0 w-screen h-screen bg-black/50  z-50"
+          onClick={() => setIsDrawerOpen(false)}
+        ></label>
+      )}
+
+      {/* Drawer content */}
+      <div className="relative drawer-content drawer">
         <button
           onClick={handlePrev}
           className={`
@@ -167,14 +217,23 @@ export default function ProductsCarousel({
 
                     {itemsPerPage !== 1 && (
                       <div className="absolute inset-0 flex justify-center items-center gap-2 bg-white bg-opacity-90 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <Button
-                          size="sm"
-                          variant="yellow"
-                          className="w-full rounded-full text-xs"
-                          disabled={!product.is_available}
+                        <label
+                          htmlFor="cart-drawer"
+                          className="cursor-pointer w-full"
                         >
-                          Add to Cart
-                        </Button>
+                          <Button
+                            size="sm"
+                            variant="yellow"
+                            className="w-full rounded-full text-xs"
+                            disabled={!product.is_available}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openQuickPurchase(product);
+                            }}
+                          >
+                            Add to Cart
+                          </Button>
+                        </label>
                         <Button variant="ghost" size="icon-sm">
                           <Heart className="text-yellow-500" />
                         </Button>
@@ -227,6 +286,33 @@ export default function ProductsCarousel({
           })}
         </div>
       </div>
+      {/* Drawer Panel */}
+      {selectedProduct && (
+        <DrawerPanel
+          selectedProduct={selectedProduct}
+          isDrawerOpen={isDrawerOpen}
+          setIsDrawerOpen={setIsDrawerOpen}
+          selectedQuantity={selectedQuantity}
+          setSelectedQuantity={setSelectedQuantity}
+          handleAddToCartFromDrawer={handleAddToCartFromDrawer}
+          allergenIcons={allergenIcons}
+          tabContent={{
+            Ingredients: "No ingredients info",
+            Allergens: "No allergens info",
+          }}
+        />
+      )}
+
+      {selectedProduct && (
+        <AddToCartDialog
+          isOpen={showDialog}
+          onClose={() => setShowDialog(false)}
+          productName={selectedProduct.name}
+          productImage={selectedProduct.image_url}
+          quantity={selectedQuantity}
+          price={Number(selectedProduct.price ?? 0)}
+        />
+      )}
     </div>
   );
 }

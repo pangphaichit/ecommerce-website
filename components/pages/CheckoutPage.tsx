@@ -4,7 +4,7 @@ import NotificationBar from "@/components/landing-page-components/NotificationBa
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 
-const MyAccountPage = () => {
+const CheckoutPage = () => {
   const { userRole, logout, userId } = useAuth();
   const [userName, setUserName] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -43,7 +43,7 @@ const MyAccountPage = () => {
       <Navbar />
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold">My Account</h1>
+          <h1 className="text-2xl font-semibold">Checkout Page</h1>
           <button
             onClick={handleLogout}
             className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded cursor-pointer"
@@ -73,4 +73,4 @@ const MyAccountPage = () => {
   );
 };
 
-export default MyAccountPage;
+export default CheckoutPage;

@@ -6,7 +6,7 @@ import React, {
   useRef,
 } from "react";
 import axios from "axios";
-import { useAuth } from "@/context/authentication";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
 import zxcvbn from "zxcvbn";
