@@ -2,26 +2,7 @@ import { useEffect, useState } from "react";
 import ProductsCarousel from "@/components/landing-page-components/ProductsCarousel";
 import SkeletonProductsCarousel from "@/components/ui/SkeletonProductsCarousel";
 import axios from "axios";
-
-interface Product {
-  product_id: string;
-  name: string;
-  description: string;
-  price: number | null;
-  is_available: boolean;
-  category_id: number | null;
-  size: string;
-  ingredients: string;
-  allergens: string;
-  nutritional_info: string;
-  seasonal: string;
-  collection: string;
-  stock_quantity: number;
-  min_order_quantity: number;
-  image_url: string;
-  slug: string;
-  image_file?: File;
-}
+import { Product } from "@/types/products";
 
 export default function BestSellingSection() {
   const [products, setProducts] = useState<Product[]>([]);
