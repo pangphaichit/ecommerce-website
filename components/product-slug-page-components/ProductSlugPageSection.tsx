@@ -4,7 +4,9 @@ import ProductImages from "@/components/product-slug-page-components/ProductImag
 import ProductInfo from "@/components/product-slug-page-components/ProductInfo";
 import ProductTabs from "@/components/product-slug-page-components/ProductTabs";
 import YouMayAlsoLike from "@/components/product-slug-page-components/YouMayAlsoLike";
-import { Bean, Wheat, Egg, Milk, Circle, Frown } from "lucide-react";
+import SkeletonProductSlugPage from "@/components/ui/SkeletonProductSlugPage";
+import SkeletonYouMayAlsoLike from "@/components/ui/SkeletonYouMayAlsoLike";
+import { Bean, Wheat, Egg, Milk, Frown } from "lucide-react";
 
 export default function ProductSlugPageSection() {
   const router = useRouter();
@@ -24,6 +26,12 @@ export default function ProductSlugPageSection() {
   };
 
   useEffect(() => {
+    if (product) {
+      setQuantity(1);
+    }
+  }, [product]);
+
+  useEffect(() => {
     if (!router.isReady || !slug) return;
     const fetchProduct = async () => {
       try {
@@ -41,7 +49,15 @@ export default function ProductSlugPageSection() {
     fetchProduct();
   }, [router.isReady, slug]);
 
-  if (loading) return <div className="text-center p-10">Loading...</div>;
+  if (loading)
+    return (
+      <div>
+        <SkeletonProductSlugPage />
+        <div className="mx-4 mb-4 lg:mb-8  lg:w-[70%] lg:mx-auto">
+          <SkeletonYouMayAlsoLike />
+        </div>
+      </div>
+    );
   if (error || !slug)
     return (
       <div>
@@ -64,6 +80,7 @@ export default function ProductSlugPageSection() {
           product={product}
           quantity={quantity}
           setQuantity={setQuantity}
+          price={product.price}
         />
       </div>
       <ProductTabs

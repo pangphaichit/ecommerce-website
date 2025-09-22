@@ -6,7 +6,7 @@ import {
   useEffect,
 } from "react";
 import axios from "axios";
-import { useAuth } from "@/context/authentication";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, House, Eye, EyeOff } from "lucide-react";

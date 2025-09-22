@@ -1,28 +1,13 @@
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { Heart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useCart } from "@/context/CartContext";
+import { Heart, Wheat, Milk, Bean, Egg } from "lucide-react";
+import DrawerPanel from "@/components/DrawerPanel";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
-
-interface Product {
-  product_id: string;
-  name: string;
-  description: string;
-  price: number | null;
-  is_available: boolean;
-  category_id: number | null;
-  size: string;
-  ingredients: string;
-  allergens: string;
-  nutritional_info: string;
-  seasonal: string;
-  collection: string;
-  stock_quantity: number;
-  min_order_quantity: number;
-  image_url: string;
-  slug: string;
-  image_file?: File;
-}
+import AddToCartDialog from "@/components/product-slug-page-components/AddToCartDialog";
+import { Product } from "@/types/products";
 
 interface ProductListProps {
   products: Product[];
@@ -36,9 +21,52 @@ export default function ProductList({
   onClearFilters,
 }: ProductListProps) {
   const router = useRouter();
+  const { addToCart } = useCart();
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedQuantity, setSelectedQuantity] = useState(1);
+  const [showDialog, setShowDialog] = useState(false);
+
+  useEffect(() => {
+    if (isDrawerOpen) {
+      // Lock scroll
+      document.body.style.overflow = "hidden";
+    } else {
+      // Restore scroll
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isDrawerOpen]);
+
+  const allergenIcons: Record<string, React.ReactNode> = {
+    Nuts: <Bean size={16} className="text-yellow-600" />,
+    Gluten: <Wheat size={16} className="text-yellow-600" />,
+    Eggs: <Egg size={16} className="text-yellow-600" />,
+    Dairy: <Milk size={16} className="text-yellow-600" />,
+  };
 
   const handleProductClick = (slug: string) => {
     router.push(`/products/${slug}`);
+  };
+
+  const openQuickPurchase = (product: Product) => {
+    if (!product.is_available) return;
+    setSelectedProduct(product);
+    setSelectedQuantity(1); // reset quantity
+    setIsDrawerOpen(true);
+  };
+
+  const handleAddToCartFromDrawer = (product: Product, quantity: number) => {
+    addToCart({ ...product, price: Number(product.price) }, quantity);
+    setSelectedProduct(product); // keep the product for the dialog
+    setIsDrawerOpen(false);
+    setShowDialog(true);
+    setTimeout(() => {
+      setShowDialog(false);
+    }, 3000);
   };
 
   const validProducts = products.filter(Boolean);
@@ -74,11 +102,27 @@ export default function ProductList({
   }
 
   return (
-    <div className="w-full max-w-[93%] lg:max-w-[95%] mx-auto grid gap-4 grid-cols-1 lg:grid-cols-3">
+    <div className="w-full max-w-[93%] lg:max-w-[95%] mx-auto grid gap-4 grid-cols-1 lg:grid-cols-3 drawer drawer-end">
+      {/* Drawer toggle input */}
+      <input
+        id="cart-drawer"
+        type="checkbox"
+        className="drawer-toggle hidden"
+      />
+      {isDrawerOpen && (
+        <label
+          htmlFor="cart-drawer"
+          className="drawer-overlay fixed top-0 left-0 w-screen h-screen bg-black/50  z-50"
+          onClick={() => setIsDrawerOpen(false)}
+        ></label>
+      )}
+
+      {/* Drawer content */}
+
       {validProducts.map((product) => (
         <div
           key={product.product_id}
-          className="cursor-pointer group border border-gray-200 rounded-xl overflow-hidden relative hover:shadow-lg transition-shadow duration-200"
+          className="drawer-content drawer cursor-pointer group border border-gray-200 rounded-xl overflow-hidden relative hover:shadow-lg transition-shadow duration-200"
           onClick={() => handleProductClick(product.slug)}
         >
           <div className="relative h-52 bg-gray-100">
@@ -118,18 +162,20 @@ export default function ProductList({
             </p>
 
             <div className="mt-3 flex gap-2">
-              <Button
-                size="sm"
-                variant="yellow"
-                className="flex-1 rounded-full text-xs"
-                disabled={!product.is_available}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  alert(`Add ${product.name} to cart!`);
-                }}
-              >
-                Add to Cart
-              </Button>
+              <label htmlFor="cart-drawer" className="cursor-pointer w-full">
+                <Button
+                  size="sm"
+                  variant="yellow"
+                  className="flex-1 rounded-full text-xs w-full"
+                  disabled={!product.is_available}
+                  onClick={(e) => {
+                    e.stopPropagation(); // prevent parent click
+                    openQuickPurchase(product);
+                  }}
+                >
+                  Add to Cart
+                </Button>
+              </label>
               <Button
                 variant="ghost"
                 size="icon-sm"
@@ -148,6 +194,33 @@ export default function ProductList({
           </div>
         </div>
       ))}
+
+      {/* Drawer Panel */}
+      {selectedProduct && (
+        <DrawerPanel
+          selectedProduct={selectedProduct}
+          isDrawerOpen={isDrawerOpen}
+          setIsDrawerOpen={setIsDrawerOpen}
+          selectedQuantity={selectedQuantity}
+          setSelectedQuantity={setSelectedQuantity}
+          handleAddToCartFromDrawer={handleAddToCartFromDrawer}
+          allergenIcons={allergenIcons}
+          tabContent={{
+            Ingredients: "No ingredients info",
+            Allergens: "No allergens info",
+          }}
+        />
+      )}
+      {selectedProduct && (
+        <AddToCartDialog
+          isOpen={showDialog}
+          onClose={() => setShowDialog(false)}
+          productName={selectedProduct.name}
+          productImage={selectedProduct.image_url}
+          quantity={selectedQuantity}
+          price={Number(selectedProduct.price ?? 0)}
+        />
+      )}
     </div>
   );
 }

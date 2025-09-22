@@ -13,7 +13,7 @@ import {
   FileText,
   LogOut,
 } from "lucide-react";
-import { useAuth } from "@/context/authentication";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
 
