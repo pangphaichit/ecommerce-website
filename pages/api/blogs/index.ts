@@ -4,15 +4,19 @@ import connectionPool from "@/utils/db";
 interface Blog {
   blog_id: number;
   title: string;
-  slug: string;
-  category: number;
   article: string;
   image_url: string;
-  author_id: number;
-  created_at: Date;
-  update_at: Date;
-  page?: string;
-  limit?: string;
+  create_at: string;
+  update_at: string;
+  slug: string;
+  category_name: string;
+  author_name: string;
+  author_role: string;
+  avatar: string;
+  likes: number;
+  shares: number;
+  total_reads: number;
+  read_minutes: number;
 }
 
 export default async function handler(
@@ -58,6 +62,7 @@ export default async function handler(
         c.name AS category_name,
         a.name AS author_name,
         a.role AS author_role,
+        a.avatar,
         s.likes,
         s.shares,
         s.total_reads,
