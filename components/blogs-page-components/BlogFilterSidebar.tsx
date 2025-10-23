@@ -2,7 +2,7 @@ import React from "react";
 import { useState, useCallback } from "react";
 import Select from "@/components/ui/Select";
 import { ChefHat, Sparkles, User, Palette, X, Search } from "lucide-react";
-import BlogTabs from "@/components/blog-page-components/BlogTabs";
+import BlogTabs from "@/components/blogs-page-components/BlogTabs";
 import Button from "@/components/ui/Button";
 
 interface Blog {

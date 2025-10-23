@@ -52,7 +52,7 @@ const routes = [
   { name: "Products", path: "/products" },
   { name: "Courses", path: "/courses" },
   { name: "News & Events", path: "/news-and-events" },
-  { name: "Blog", path: "/blog" },
+  { name: "Blogs", path: "/blogs" },
   { name: "About", path: "/about-us" },
 ];
 

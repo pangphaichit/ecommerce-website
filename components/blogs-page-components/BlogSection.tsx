@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { X } from "lucide-react";
-import BlogHeader from "@/components/blog-page-components/BlogHeader";
+import BlogHeader from "@/components/blogs-page-components/BlogHeader";
 
-import BlogList from "@/components/blog-page-components/BlogList";
-import BlogFilterSidebar from "@/components/blog-page-components/BlogFilterSidebar";
+import BlogList from "@/components/blogs-page-components/BlogList";
+import BlogFilterSidebar from "@/components/blogs-page-components/BlogFilterSidebar";
 import Select from "@/components/ui/Select";
 import Pagination from "@/components/ui/Pagination";
 import SkeletonBlogList from "@/components/ui/SkeletonBlogList";
