@@ -34,8 +34,10 @@ export default function BlogSection() {
   if (!blog) return <p>No blog found</p>;
 
   return (
-    <div className="w-[93%] lg:w-[95%] mx-auto flex flex-col gap-4">
-      <h1>{blog.title}</h1>
+    <div className="w-[93%] lg:w-[95%] mx-auto flex flex-col gap-4 mb-4">
+      <h1 className="text-2xl lg:text-4xl text-yellow-700 font-bold">
+        {blog.title}
+      </h1>
       <p>By {blog.author_name}</p>
       <img src={blog.image_url} alt={blog.title} className="rounded-md" />
       <div className="whitespace-pre-line">{blog.article}</div>

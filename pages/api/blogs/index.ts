@@ -87,9 +87,9 @@ export default async function handler(
     }
 
     // --- Category Filter ---
-    if (category) {
+    if (category && category !== "all") {
       query += ` AND b.category = $${paramIndex}`;
-      params.push(category);
+      params.push(parseInt(category as string, 10)); // convert string ID to number
       paramIndex++;
     }
 
@@ -113,6 +113,12 @@ export default async function handler(
         break;
       case "most_read":
         query += " ORDER BY s.total_reads DESC NULLS LAST";
+        break;
+      case "alphabet_asc":
+        query += " ORDER BY b.title ASC";
+        break;
+      case "alphabet_desc":
+        query += " ORDER BY b.title DESC";
         break;
       default:
         query += " ORDER BY b.create_at DESC";
@@ -143,9 +149,9 @@ export default async function handler(
       countParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
       countIndex += 3;
     }
-    if (category) {
+    if (category && category !== "all") {
       countQuery += ` AND b.category = $${countIndex}`;
-      countParams.push(category);
+      countParams.push(parseInt(category as string, 10));
       countIndex++;
     }
     if (author_role) {

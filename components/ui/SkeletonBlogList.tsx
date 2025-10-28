@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 
 export default function SkeletonBlogList() {
-  // Responsive items per row
   const [itemsPerRow, setItemsPerRow] = useState(1);
 
   useEffect(() => {
@@ -13,40 +12,35 @@ export default function SkeletonBlogList() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Create an array with the number of skeleton cards
-  const skeletonArray = Array(itemsPerRow * 2).fill(null); // 2 rows of skeleton cards
+  const skeletonCount = itemsPerRow * 2;
 
   return (
     <div
-      className="w-full max-w-[93%] lg:max-w-[95%] mx-auto grid gap-4 mb-4"
-      style={{ gridTemplateColumns: `repeat(${itemsPerRow}, minmax(0, 1fr))` }}
+      className={`grid gap-6 grid-cols-1 lg:grid-cols-${itemsPerRow} mt-3 mb-6 lg:mt-6`}
     >
-      {skeletonArray.map((_, idx) => (
+      {Array.from({ length: skeletonCount }).map((_, idx) => (
         <div
           key={idx}
-          className="group border border-gray-200 rounded-xl overflow-hidden relative cursor-pointer animate-pulse"
+          className="animate-pulse bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
         >
-          <div className="relative h-52 bg-gray-200" />
+          <div className="relative w-full h-64 bg-gray-200" />
 
-          <div className="p-4 relative">
-            {/* Product Name */}
-            <div className="h-5 w-3/4 bg-gray-300 rounded mb-2" />
-
-            {/* Description */}
-            <div className="mt-2 space-y-1">
-              <div className="h-3 w-full bg-gray-300 rounded" />
-              <div className="h-3 w-5/6 bg-gray-300 rounded" />
-              <div className="h-3 w-2/3 bg-gray-300 rounded" />
+          <div className="p-4">
+            <div className="w-32 h-5 bg-gray-300 rounded-full mb-3" />
+            <div className="w-full h-6 bg-gray-300 rounded mb-2" />
+            <div className="w-full h-4 bg-gray-300 rounded mb-2" />
+            <div className="w-3/4 h-4 bg-gray-300 rounded mb-4" />
+            <div className="flex items-center gap-2 mt-2">
+              <div className="w-8 h-8 rounded-full bg-gray-300" />
+              <div className="flex-1">
+                <div className="w-50 h-3 bg-gray-300 rounded mb-1" />
+              </div>
             </div>
+            <div className="w-3/4 h-4 bg-gray-300 rounded mt-4" />
+          </div>
 
-            {/* Buttons */}
-            <div className="mt-3 flex gap-2">
-              <div className="h-8 flex-1 bg-gray-300 rounded-full" />
-              <div className="h-8 w-8 bg-gray-300 rounded-full" />
-            </div>
-
-            {/* Price */}
-            <div className="h-5 w-12 bg-gray-300 rounded absolute top-4 right-4" />
+          <div className="px-4 py-4 border-t border-gray-100 flex">
+            <div className="w-20 lg:w-25 h-4 bg-gray-300 rounded" />
           </div>
         </div>
       ))}

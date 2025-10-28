@@ -1,27 +1,20 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { X } from "lucide-react";
 import BlogHeader from "@/components/blogs-page-components/BlogHeader";
-
+import axios from "axios";
 import BlogList from "@/components/blogs-page-components/BlogList";
 import BlogFilterSidebar from "@/components/blogs-page-components/BlogFilterSidebar";
-import Select from "@/components/ui/Select";
 import Pagination from "@/components/ui/Pagination";
 import SkeletonBlogList from "@/components/ui/SkeletonBlogList";
-
-interface Filters {
-  searchQuery?: string;
-  category?: string;
-  authorRole?: string;
-  sort?: string;
-}
 
 export default function BlogSection() {
   const [blogs, setBlogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sort, setSort] = useState("newest");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [category, setCategory] = useState("All");
 
-  const [filters, setFilters] = useState<Filters>({});
+  const [authorRole, setAuthorRole] = useState("");
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -32,29 +25,9 @@ export default function BlogSection() {
   const isFetchingRef = useRef(false);
   const lastRequestRef = useRef("");
 
-  const sortOptions = useMemo(
-    () => [
-      { label: "Newest First", value: "newest" },
-      { label: "Oldest First", value: "oldest" },
-      { label: "Most Liked", value: "most_liked" },
-      { label: "Most Read", value: "most_read" },
-    ],
-    []
-  );
-
-  const handleFilterChange = useCallback((newFilters: Partial<Filters>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  }, []);
-
-  const handleClearFilters = useCallback(() => {
-    setFilters({});
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  }, []);
-
   const isFiltering = useMemo(
-    () => !!filters.searchQuery || !!filters.category || !!filters.authorRole,
-    [filters]
+    () => !!searchQuery || (!!category && category !== "All") || !!authorRole,
+    [searchQuery, category, authorRole]
   );
 
   const requestParams = useMemo(() => {
@@ -63,11 +36,18 @@ export default function BlogSection() {
       limit: pagination.limit,
       sort,
     };
-    if (filters.searchQuery) params.search = filters.searchQuery;
-    if (filters.category) params.category = filters.category;
-    if (filters.authorRole) params.author_role = filters.authorRole;
+    if (category && category !== "All") params.category = category;
+    if (authorRole && authorRole !== "All") params.author_role = authorRole;
+    if (searchQuery) params.search = searchQuery;
     return params;
-  }, [pagination.page, pagination.limit, sort, filters]);
+  }, [
+    pagination.page,
+    pagination.limit,
+    sort,
+    category,
+    authorRole,
+    searchQuery,
+  ]);
 
   const fetchBlogs = useCallback(async () => {
     const requestKey = JSON.stringify(requestParams);
@@ -80,13 +60,11 @@ export default function BlogSection() {
       setError(null);
 
       const queryString = new URLSearchParams(requestParams).toString();
-      const response = await fetch(`/api/blogs?${queryString}`);
-      if (!response.ok) throw new Error("Failed to fetch blogs");
+      const response = await axios.get(`/api/blogs?${queryString}`);
 
-      const data = await response.json();
-      setBlogs(data.blogs || []);
-      console.log(data.blogs);
-      setPagination(data.pagination);
+      setBlogs(response.data.blogs || []);
+      console.log(response.data.blogs);
+      setPagination(response.data.pagination);
     } catch (err: any) {
       setError(err.message || "Failed to load blogs");
       setBlogs([]);
@@ -106,9 +84,31 @@ export default function BlogSection() {
       setPagination((prev) => ({ ...prev, page: newPage }));
     }
   };
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newSort = e.target.value;
+
+  const handleSortChange = (newSort: string) => {
     setSort(newSort);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
+  const handleCategoryChange = (cat: string) => {
+    setCategory(cat);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
+  const handleAuthorRoleChange = (role: string) => {
+    setAuthorRole(role);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setCategory("");
+    setAuthorRole("");
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
@@ -116,7 +116,20 @@ export default function BlogSection() {
     <div className="w-[93%] lg:w-[95%] mx-auto flex flex-col">
       <BlogHeader />
 
-      <BlogFilterSidebar blogs={[]} />
+      <BlogFilterSidebar
+        blogs={[]}
+        isFiltering={isFiltering}
+        searchQuery={searchQuery}
+        sort={sort}
+        category={category}
+        authorRole={authorRole}
+        onSearchChange={handleSearchChange}
+        onSortChange={handleSortChange}
+        onCategoryChange={handleCategoryChange}
+        onAuthorRoleChange={handleAuthorRoleChange}
+        onClearFilters={handleClearFilters}
+        totalResults={pagination.total}
+      />
 
       <div className="flex-1">
         {isLoading ? (
