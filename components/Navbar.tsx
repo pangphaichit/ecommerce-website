@@ -52,7 +52,7 @@ const routes = [
   { name: "Products", path: "/products" },
   { name: "Courses", path: "/courses" },
   { name: "News & Events", path: "/news-and-events" },
-  { name: "Blog", path: "/blog" },
+  { name: "Blogs", path: "/blogs" },
   { name: "About", path: "/about-us" },
 ];
 
@@ -990,7 +990,7 @@ const Navbar = () => {
 
           {/* Cart Footer */}
           {cart.length > 0 && (
-            <div className="pt-4 px-4 mb-4">
+            <div className="sticky bottom-0 pt-4 px-4 mb-4">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-lg font-semibold">Total:</span>
                 <span className="text-xl font-bold text-yellow-600">

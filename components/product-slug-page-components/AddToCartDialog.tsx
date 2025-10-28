@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { ShoppingCart, X } from "lucide-react";
 import Button from "@/components/ui/Button";
 
@@ -23,6 +24,13 @@ export default function AddToCartDialog({
 }: AddToCartDialogProps) {
   if (!isOpen) return null;
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
+
+  const handleViewMyCart = () => {
+    router.push(
+      isAuthenticated ? "/customer/my-account/cart" : "/customer/cart"
+    );
+  };
 
   return (
     <div
@@ -105,7 +113,7 @@ export default function AddToCartDialog({
             variant="yellow"
             onClick={() => {
               onClose();
-              router.push("/customer/my-account/cart");
+              handleViewMyCart();
             }}
             className="w-full py-3 text-base font-semibold rounded-full"
           >
