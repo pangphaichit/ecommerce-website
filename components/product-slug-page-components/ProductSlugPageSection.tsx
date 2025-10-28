@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import ProductImages from "@/components/product-slug-page-components/ProductImages";
@@ -36,10 +37,8 @@ export default function ProductSlugPageSection() {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/products/${slug}`);
-        if (!res.ok) throw new Error("Not found");
-        const data = await res.json();
-        setProduct(data.data);
+        const res = await axios.get(`/api/products/${slug}`);
+        setProduct(res.data.data);
       } catch {
         setError(true);
       } finally {

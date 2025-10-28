@@ -62,7 +62,7 @@ const mockData = [
   {
     badge: "event",
     Highlight: "Community Event",
-    categories: ["courses", "events"],
+    categories: ["events"],
     title: "Oven & Wheat at San Francisco Flea Market",
     detail:
       "Join us at the iconic San Francisco Flea Market! We'll be bringing our freshly baked goods, offering samples of our signature breads, and sharing stories of our journey from English village to the Bay Area. Special market prices on select items!",
@@ -374,7 +374,7 @@ export default function NewsEventCard() {
                     </span>
                   </div>
                 </div>
-                <div className="px-6 pt-6 pb-9 space-y-5">
+                <div className="px-4 lg:px-6 pt-4 lg:pt-6 pb-7 lg:pb-9 space-y-5">
                   <div className="flex items-center justify-between">
                     <span className="text-[0.65rem] font-semibold text-gray-500 bg-gray-100 py-1.5 px-2 uppercase tracking-wide rounded-md">
                       {item.Highlight}
