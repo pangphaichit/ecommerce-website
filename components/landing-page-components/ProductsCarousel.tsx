@@ -248,8 +248,12 @@ export default function ProductsCarousel({
                         variant="yellow"
                         className="w-full rounded-full text-xs"
                         disabled={!product.is_available}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openQuickPurchase(product);
+                        }}
                       >
-                        Add to Bag
+                        Add to Cart
                       </Button>
                       <Button variant="ghost" size="icon-sm">
                         <Heart className="text-yellow-500" />
