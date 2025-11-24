@@ -2,15 +2,20 @@ import { ChangeEvent } from "react";
 
 //Custom Alert
 export interface CustomAlertProps {
-  open: boolean;
-  message: string;
-  type: "success" | "error";
-  onClose: () => void;
+  alerts: AlertItem[];
+  onClose: (id: number) => void;
   autoHideDuration?: number;
   position?: {
     vertical: "top" | "bottom";
     horizontal: "left" | "center" | "right";
   };
+}
+
+export interface AlertItem {
+  id: number;
+  message: string;
+  type: "success" | "error";
+  source?: "global" | "local";
 }
 
 //Custom Help Tooltip

@@ -11,7 +11,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, House, Eye, EyeOff } from "lucide-react";
 import Input from "@/components/ui/Input";
-import CustomAlert from "@/components/ui/CustomAlert";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import CustomHelpTooltip from "@/components/ui/CustomHelpTooltip";
 import {
@@ -21,7 +20,7 @@ import {
 } from "@/types/auth/";
 
 const LoginForm = () => {
-  const { login } = useAuth();
+  const { login, showAlert } = useAuth();
   // Stores the values of each form field
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -47,11 +46,6 @@ const LoginForm = () => {
 
   // Loading
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  // State for managing the custom alert
-  const [alertOpen, setAlertOpen] = useState<boolean>(false);
-  const [alertMessage, setAlertMessage] = useState<string>("");
-  const [alertType, setAlertType] = useState<"success" | "error">("success");
 
   // Refs for input fields to access their values directly
   const emailRef = useRef<HTMLInputElement>(null);
@@ -181,7 +175,7 @@ const LoginForm = () => {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data?.error;
-
+        showAlert(errorMessage, "error", "global");
         if (
           errorMessage?.includes("credentails") ||
           errorMessage?.includes("Invalid credentials")
@@ -205,14 +199,14 @@ const LoginForm = () => {
             });
           }
         } else {
-          setAlertMessage(errorMessage || "Login failed. Please try again.");
-          setAlertType("error");
-          setAlertOpen(true);
+          showAlert("Login failed. Please try again.", "error", "global");
         }
       } else {
-        setAlertMessage("An unexpected error occurred. Please try again.");
-        setAlertType("error");
-        setAlertOpen(true);
+        showAlert(
+          "An unexpected error occurred. Please try again.",
+          "error",
+          "global"
+        );
       }
     } finally {
       setIsLoading(false);
@@ -363,13 +357,6 @@ const LoginForm = () => {
             </Link>
           </p>
         </form>
-        <CustomAlert
-          open={alertOpen}
-          message={alertMessage}
-          type={alertType}
-          onClose={() => setAlertOpen(false)}
-          aria-live="assertive"
-        />
       </div>
     </div>
   );
