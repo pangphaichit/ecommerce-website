@@ -1,9 +1,13 @@
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useFavorites } from "@/context/FavoritesContext";
 import { Heart, Store, Truck, Star, Minus, Plus } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import AddToCartDialog from "@/components/product-slug-page-components/AddToCartDialog";
+import CustomAlert from "@/components/ui/CustomAlert";
+import { AlertItem } from "@/types/ui";
 
 interface Props {
   product: any;
@@ -13,10 +17,20 @@ interface Props {
 }
 
 export default function ProductInfo({ product, quantity, setQuantity }: Props) {
+  const { isAuthenticated } = useAuth();
+  const {
+    favorites,
+    addFavorite,
+    removeFavorite,
+    isFavorite,
+    loading: favLoading,
+  } = useFavorites();
   const { addToCart } = useCart();
   const [showDialog, setShowDialog] = useState(false);
   const increment = () => setQuantity(quantity + 1);
   const decrement = () => setQuantity(Math.max(1, quantity - 1));
+  // State for stacked alerts
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
 
   const handleAddToCart = () => {
     if (product.is_available) {
@@ -27,6 +41,20 @@ export default function ProductInfo({ product, quantity, setQuantity }: Props) {
       setTimeout(() => {
         setShowDialog(false);
       }, 3000);
+    }
+  };
+
+  const showAlert = (
+    message: string,
+    type: "success" | "error",
+    scope: "local" | "global" = "local"
+  ) => {
+    if (scope === "local") {
+      const id = Date.now() + Math.random();
+
+      setAlerts((prev) => [{ id, message, type }, ...prev]);
+    } else {
+      console.warn("Global alert triggered:", message);
     }
   };
 
@@ -45,7 +73,44 @@ export default function ProductInfo({ product, quantity, setQuantity }: Props) {
           <h1 className="text-[1.1rem] lg:text-2xl font-semibold text-center">
             {product.name}
           </h1>
-          <Heart size={18} />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={async (e) => {
+              e.stopPropagation();
+              try {
+                if (isFavorite(product.product_id)) {
+                  await removeFavorite(product.product_id);
+                  showAlert("Removed from favorites", "success", "local");
+                } else {
+                  await addFavorite(product.product_id);
+                  // Show different message for guest vs logged-in
+                  if (isAuthenticated) {
+                    showAlert("Added to favorites!", "success", "local");
+                  } else {
+                    showAlert(
+                      "Added to favorites! Log in to sync",
+                      "success",
+                      "local"
+                    );
+                  }
+                }
+              } catch (err) {
+                console.error("Error updating favorites:", err);
+                showAlert("Failed to update favorite", "error");
+              }
+            }}
+          >
+            <Heart
+              size={18}
+              className={`transition-colors duration-200 ${
+                isFavorite(product.product_id)
+                  ? "text-yellow-400"
+                  : "text-gray-300"
+              }`}
+              fill={isFavorite(product.product_id) ? "currentColor" : "none"}
+            />
+          </Button>
         </div>
         <p className="text-base lg:text-lg">
           {" "}
@@ -122,6 +187,12 @@ export default function ProductInfo({ product, quantity, setQuantity }: Props) {
         productImage={product.image_url}
         quantity={quantity}
         price={Number(product.price ?? 0)}
+      />
+      <CustomAlert
+        alerts={alerts}
+        onClose={(id) => {
+          setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+        }}
       />
     </div>
   );

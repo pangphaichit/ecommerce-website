@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useFavorites } from "@/context/FavoritesContext";
 import {
   ChevronLeft,
   ChevronRight,
@@ -12,10 +14,12 @@ import {
 } from "lucide-react";
 import DrawerPanel from "@/components/DrawerPanel";
 import AddToCartDialog from "@/components/product-slug-page-components/AddToCartDialog";
+import CustomAlert from "@/components/ui/CustomAlert";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import { useRouter } from "next/router";
 import { Product } from "@/types/products";
+import { AlertItem } from "@/types/ui";
 
 export default function ProductsCarousel({
   products,
@@ -23,7 +27,15 @@ export default function ProductsCarousel({
   products: Product[];
 }) {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const { addToCart } = useCart();
+  const {
+    favorites,
+    addFavorite,
+    removeFavorite,
+    isFavorite,
+    loading: favLoading,
+  } = useFavorites();
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
@@ -35,6 +47,9 @@ export default function ProductsCarousel({
 
   // rack how many items to show per page (responsive)
   const [itemsPerPage, setItemsPerPage] = useState(1);
+  // State for stacked alerts
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+
   useEffect(() => {
     if (isDrawerOpen) {
       // Lock scroll
@@ -112,6 +127,20 @@ export default function ProductsCarousel({
     Gluten: <Wheat size={16} className="text-yellow-600" />,
     Eggs: <Egg size={16} className="text-yellow-600" />,
     Dairy: <Milk size={16} className="text-yellow-600" />,
+  };
+
+  const showAlert = (
+    message: string,
+    type: "success" | "error",
+    scope: "local" | "global" = "local"
+  ) => {
+    if (scope === "local") {
+      const id = Date.now() + Math.random();
+
+      setAlerts((prev) => [{ id, message, type }, ...prev]);
+    } else {
+      console.warn("Global alert triggered:", message);
+    }
   };
 
   return (
@@ -234,8 +263,54 @@ export default function ProductsCarousel({
                             Add to Cart
                           </Button>
                         </label>
-                        <Button variant="ghost" size="icon-sm">
-                          <Heart className="text-yellow-500" />
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              if (isFavorite(product.product_id)) {
+                                await removeFavorite(product.product_id);
+                                showAlert(
+                                  "Removed from favorites",
+                                  "success",
+                                  "local"
+                                );
+                              } else {
+                                await addFavorite(product.product_id);
+                                // Show different message for guest vs logged-in
+                                if (isAuthenticated) {
+                                  showAlert(
+                                    "Added to favorites!",
+                                    "success",
+                                    "local"
+                                  );
+                                } else {
+                                  showAlert(
+                                    "Added to favorites! Log in to sync",
+                                    "success",
+                                    "local"
+                                  );
+                                }
+                              }
+                            } catch (err) {
+                              console.error("Error updating favorites:", err);
+                              showAlert("Failed to update favorite", "error");
+                            }
+                          }}
+                        >
+                          <Heart
+                            className={`transition-colors duration-200 ${
+                              isFavorite(product.product_id)
+                                ? "text-yellow-400"
+                                : "text-gray-300"
+                            }`}
+                            fill={
+                              isFavorite(product.product_id)
+                                ? "currentColor"
+                                : "none"
+                            }
+                          />
                         </Button>
                       </div>
                     )}
@@ -317,6 +392,12 @@ export default function ProductsCarousel({
           price={Number(selectedProduct.price ?? 0)}
         />
       )}
+      <CustomAlert
+        alerts={alerts}
+        onClose={(id) => {
+          setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+        }}
+      />
     </div>
   );
 }
