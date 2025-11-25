@@ -17,6 +17,7 @@ import {
   ForgotFormErrorState,
   ForgotFormTouchedState,
 } from "@/types/customer/";
+import { AlertItem } from "@/types/ui";
 
 const ForgotPasswordForm = () => {
   // Stores the values of each form field
@@ -39,10 +40,8 @@ const ForgotPasswordForm = () => {
   // Loading
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // State for managing the custom alert
-  const [alertOpen, setAlertOpen] = useState<boolean>(false);
-  const [alertMessage, setAlertMessage] = useState<string>("");
-  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  // State for stacked alerts
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
 
   // Refs for input fields to access their values directly
   const emailRef = useRef<HTMLInputElement>(null);
@@ -134,6 +133,20 @@ const ForgotPasswordForm = () => {
     return !Object.values(newErrors).some((error) => error.hasError);
   };
 
+  const showAlert = (
+    message: string,
+    type: "success" | "error",
+    scope: "local" | "global" = "local"
+  ) => {
+    if (scope === "local") {
+      const id = Date.now() + Math.random();
+
+      setAlerts((prev) => [{ id, message, type }, ...prev]);
+    } else {
+      console.warn("Global alert triggered:", message);
+    }
+  };
+
   // Handles form submission.
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -150,21 +163,27 @@ const ForgotPasswordForm = () => {
       await axios.post("/api/auth/forgot-password", {
         email,
       });
-      setAlertMessage("Password reset email has been sent successfully.");
-      setAlertType("success");
-      setAlertOpen(true);
+      showAlert(
+        "Password reset email has been sent successfully.",
+        "success",
+        "local"
+      );
     } catch (error: unknown) {
       // Type assertion to AxiosError
       if (axios.isAxiosError(error)) {
-        setAlertMessage(
+        showAlert(
           error.response?.data?.error ||
-            "Failed to send password reset email. Please try again."
+            "Failed to send password reset email. Please try again.",
+          "success",
+          "local"
         );
       } else {
-        setAlertMessage("An unexpected error occurred. Please try again.");
+        showAlert(
+          "An unexpected error occurred. Please try again.",
+          "success",
+          "local"
+        );
       }
-      setAlertType("error");
-      setAlertOpen(true);
     } finally {
       setIsLoading(false);
     }
@@ -259,11 +278,10 @@ const ForgotPasswordForm = () => {
           </p>
         </form>
         <CustomAlert
-          open={alertOpen}
-          message={alertMessage}
-          type={alertType}
-          onClose={() => setAlertOpen(false)}
-          aria-live="assertive"
+          alerts={alerts}
+          onClose={(id) => {
+            setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+          }}
         />
       </div>
     </div>

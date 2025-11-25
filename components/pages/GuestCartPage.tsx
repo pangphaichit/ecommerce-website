@@ -121,7 +121,7 @@ const GuestCartPage = () => {
                         alt={item.name}
                         width={60}
                         height={60}
-                        className="object-cover  w-full h-full"
+                        className="object-cover w-full h-full"
                       />
                     </div>
                     <div className="flex-1">

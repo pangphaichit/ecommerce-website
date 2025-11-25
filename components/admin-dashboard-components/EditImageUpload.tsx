@@ -59,6 +59,8 @@ function EditImageUpload({
           <Image
             src={preview}
             alt="Preview"
+            width="10"
+            height="10"
             className="object-cover w-full h-full rounded-md"
             sizes="100%"
           />
