@@ -1,13 +1,17 @@
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useFavorites } from "@/context/FavoritesContext";
 import { useCart } from "@/context/CartContext";
 import { Heart, Wheat, Milk, Bean, Egg } from "lucide-react";
 import DrawerPanel from "@/components/DrawerPanel";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import AddToCartDialog from "@/components/product-slug-page-components/AddToCartDialog";
+import CustomAlert from "@/components/ui/CustomAlert";
 import { Product } from "@/types/products";
+import { AlertItem } from "@/types/ui";
 
 interface ProductListProps {
   products: Product[];
@@ -21,11 +25,21 @@ export default function ProductList({
   onClearFilters,
 }: ProductListProps) {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const {
+    favorites,
+    addFavorite,
+    removeFavorite,
+    isFavorite,
+    loading: favLoading,
+  } = useFavorites();
   const { addToCart } = useCart();
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [showDialog, setShowDialog] = useState(false);
+  // State for stacked alerts
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
 
   useEffect(() => {
     if (isDrawerOpen) {
@@ -46,6 +60,20 @@ export default function ProductList({
     Gluten: <Wheat size={16} className="text-yellow-600" />,
     Eggs: <Egg size={16} className="text-yellow-600" />,
     Dairy: <Milk size={16} className="text-yellow-600" />,
+  };
+
+  const showAlert = (
+    message: string,
+    type: "success" | "error",
+    scope: "local" | "global" = "local"
+  ) => {
+    if (scope === "local") {
+      const id = Date.now() + Math.random();
+
+      setAlerts((prev) => [{ id, message, type }, ...prev]);
+    } else {
+      console.warn("Global alert triggered:", message);
+    }
   };
 
   const handleProductClick = (slug: string) => {
@@ -169,7 +197,7 @@ export default function ProductList({
                   className="flex-1 rounded-full text-xs w-full"
                   disabled={!product.is_available}
                   onClick={(e) => {
-                    e.stopPropagation(); // prevent parent click
+                    e.stopPropagation();
                     openQuickPurchase(product);
                   }}
                 >
@@ -179,12 +207,41 @@ export default function ProductList({
               <Button
                 variant="ghost"
                 size="icon-sm"
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.stopPropagation();
-                  alert(`Favorite ${product.name}!`);
+                  try {
+                    if (isFavorite(product.product_id)) {
+                      await removeFavorite(product.product_id);
+                      showAlert("Removed from favorites", "success", "local");
+                    } else {
+                      await addFavorite(product.product_id);
+                      // Show different message for guest vs logged-in
+                      if (isAuthenticated) {
+                        showAlert("Added to favorites!", "success", "local");
+                      } else {
+                        showAlert(
+                          "Added to favorites! Log in to sync",
+                          "success",
+                          "local"
+                        );
+                      }
+                    }
+                  } catch (err) {
+                    console.error("Error updating favorites:", err);
+                    showAlert("Failed to update favorite", "error");
+                  }
                 }}
               >
-                <Heart className="text-yellow-500" />
+                <Heart
+                  className={`transition-colors duration-200 ${
+                    isFavorite(product.product_id)
+                      ? "text-yellow-400"
+                      : "text-gray-300"
+                  }`}
+                  fill={
+                    isFavorite(product.product_id) ? "currentColor" : "none"
+                  }
+                />
               </Button>
             </div>
 
@@ -221,6 +278,12 @@ export default function ProductList({
           price={Number(selectedProduct.price ?? 0)}
         />
       )}
+      <CustomAlert
+        alerts={alerts}
+        onClose={(id) => {
+          setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+        }}
+      />
     </div>
   );
 }

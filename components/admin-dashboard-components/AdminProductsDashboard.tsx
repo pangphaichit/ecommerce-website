@@ -29,6 +29,7 @@ import EditImageUpload from "./EditImageUpload";
 import CustomAlert from "@/components/ui/CustomAlert";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Pagination from "@/components/ui/Pagination";
+import { AlertItem } from "@/types/ui";
 
 interface Product {
   product_id: string;
@@ -115,10 +116,8 @@ const AdminProductsDashboard = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // State for managing the custom alert
-  const [alertOpen, setAlertOpen] = useState<boolean>(false);
-  const [alertMessage, setAlertMessage] = useState<string>("");
-  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  // State for stacked alerts
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
 
   const { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } =
     DialogComponents;
@@ -452,9 +451,7 @@ const AdminProductsDashboard = () => {
       });
 
       if (productResponse.status === 201) {
-        setAlertType("success");
-        setAlertMessage("Product added successfully!");
-        setAlertOpen(true);
+        showAlert("Product added successfully!", "success", "local");
         setIsAddDialogOpen(false);
         setNewProduct({
           name: "",
@@ -502,31 +499,33 @@ const AdminProductsDashboard = () => {
             }));
           });
           // Show alert for other errors
-          setAlertType("error");
-          setAlertMessage(
-            serverError || "An error occurred while adding the product."
+          showAlert(
+            "An error occurred while adding the product.",
+            "error",
+            "local"
           );
-          setAlertOpen(true);
         } else {
           // Show alert for other errors
-          setAlertType("error");
-          setAlertMessage(
-            serverError || "An error occurred while adding the product."
+          showAlert(
+            "An error occurred while adding the product.",
+            "error",
+            "local"
           );
-          setAlertOpen(true);
         }
 
         setError(serverError || "An error occurred while adding the product.");
       } else if (err instanceof Error) {
-        setAlertType("error");
-        setAlertMessage(err.message);
+        showAlert("err.message", "error", "local");
+
         setError(err.message);
-        setAlertOpen(true);
       } else {
-        setAlertType("error");
-        setAlertMessage("An error occurred while adding the product.");
+        showAlert(
+          "An error occurred while adding the product.",
+          "error",
+          "local"
+        );
+
         setError("An error occurred while adding the product.");
-        setAlertOpen(true);
       }
     } finally {
       setLoading(false);
@@ -591,9 +590,7 @@ const AdminProductsDashboard = () => {
       );
 
       if (response.status === 200) {
-        setAlertType("success");
-        setAlertMessage("Product updated successfully!");
-        setAlertOpen(true);
+        showAlert("Product updated successfully!", "success", "local");
 
         setIsEditDialogOpen(false);
         setCurrentProduct(null);
@@ -629,33 +626,35 @@ const AdminProductsDashboard = () => {
           });
 
           // Show alert for other errors
-          setAlertType("error");
-          setAlertMessage(
-            serverError || "An error occurred while updating the product."
+          showAlert(
+            serverError || "An error occurred while updating the product.",
+            "error",
+            "local"
           );
-          setAlertOpen(true);
         } else {
           // Show alert for other errors
-          setAlertType("error");
-          setAlertMessage(
-            serverError || "An error occurred while updating the product."
+          showAlert(
+            serverError || "An error occurred while updating the product.",
+            "error",
+            "local"
           );
-          setAlertOpen(true);
         }
 
         setError(
           serverError || "An error occurred while updating the product."
         );
       } else if (err instanceof Error) {
-        setAlertType("error");
-        setAlertMessage(err.message);
+        showAlert(err.message, "error", "local");
+
         setError(err.message);
-        setAlertOpen(true);
       } else {
-        setAlertType("error");
-        setAlertMessage("An error occurred while updating the product.");
+        showAlert(
+          "An error occurred while updating the product.",
+          "error",
+          "local"
+        );
+
         setError("An error occurred while updating the product.");
-        setAlertOpen(true);
       }
     } finally {
       setLoading(false);
@@ -691,9 +690,7 @@ const AdminProductsDashboard = () => {
 
         // Refresh products list
         fetchProducts();
-        setAlertType("success");
-        setAlertMessage("Product deleted successfully.");
-        setAlertOpen(true);
+        showAlert("Product deleted successfully.", "success", "local");
       }
     } catch (err) {
       const message =
@@ -701,10 +698,7 @@ const AdminProductsDashboard = () => {
           ? err.message
           : "An error occurred while deleting the product.";
       setError(message);
-
-      setAlertType("error");
-      setAlertMessage(message);
-      setAlertOpen(true);
+      showAlert(message, "error", "local");
     } finally {
       setLoading(false);
     }
@@ -739,9 +733,11 @@ const AdminProductsDashboard = () => {
 
         // Refresh products list
         fetchProducts();
-        setAlertType("success");
-        setAlertMessage("Selected products deleted successfully.");
-        setAlertOpen(true);
+        showAlert(
+          "Selected products deleted successfully.",
+          "success",
+          "local"
+        );
       }
     } catch (err) {
       const message =
@@ -749,10 +745,7 @@ const AdminProductsDashboard = () => {
           ? err.message
           : "An error occurred while deleting the products.";
       setError(message);
-
-      setAlertType("error");
-      setAlertMessage(message);
-      setAlertOpen(true);
+      showAlert(message, "error", "local");
     } finally {
       setLoading(false);
     }
@@ -864,6 +857,20 @@ const AdminProductsDashboard = () => {
     Halloween: { icon: Ghost, bg: "bg-orange-600" },
     "Mother's Day": { icon: Flower, bg: "bg-pink-400" },
     "Father's Day": { icon: Sun, bg: "bg-blue-600" },
+  };
+
+  const showAlert = (
+    message: string,
+    type: "success" | "error",
+    scope: "local" | "global" = "local"
+  ) => {
+    if (scope === "local") {
+      const id = Date.now() + Math.random();
+
+      setAlerts((prev) => [{ id, message, type }, ...prev]);
+    } else {
+      console.warn("Global alert triggered:", message);
+    }
   };
 
   if (error) {
@@ -1893,11 +1900,10 @@ const AdminProductsDashboard = () => {
         </Dialog>
       </div>
       <CustomAlert
-        open={alertOpen}
-        message={alertMessage}
-        type={alertType}
-        onClose={() => setAlertOpen(false)}
-        aria-live="assertive"
+        alerts={alerts}
+        onClose={(id) => {
+          setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+        }}
       />
     </div>
   );

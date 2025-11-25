@@ -27,6 +27,7 @@ import {
   ValidationChecks,
   TouchedState,
 } from "@/types/auth/";
+import { AlertItem } from "@/types/ui";
 
 const RegisterForm = () => {
   const { register } = useAuth();
@@ -79,10 +80,8 @@ const RegisterForm = () => {
   // Loading
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // State for managing the custom alert
-  const [alertOpen, setAlertOpen] = useState<boolean>(false);
-  const [alertMessage, setAlertMessage] = useState<string>("");
-  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  // State for stacked alerts
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
 
   // Refs for input fields to access their values directly
   const firstNameRef = useRef<HTMLInputElement>(null);
@@ -308,14 +307,26 @@ const RegisterForm = () => {
     return !Object.values(newErrors).some((error) => error.hasError);
   };
 
+  const showAlert = (
+    message: string,
+    type: "success" | "error",
+    scope: "local" | "global" = "local"
+  ) => {
+    if (scope === "local") {
+      const id = Date.now() + Math.random();
+
+      setAlerts((prev) => [{ id, message, type }, ...prev]);
+    } else {
+      console.warn("Global alert triggered:", message);
+    }
+  };
+
   // Handles form submission.
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
-      setAlertMessage("Please correct the errors in the form.");
-      setAlertType("error");
-      setAlertOpen(true);
+      showAlert("Please correct the errors in the form.", "error", "local");
       return;
     }
 
@@ -341,16 +352,18 @@ const RegisterForm = () => {
             },
           }));
         } else {
-          setAlertMessage(
-            errorMessage || "Registration failed. Please try again."
+          showAlert(
+            errorMessage || "Registration failed. Please try again.",
+            "error",
+            "local"
           );
-          setAlertType("error");
-          setAlertOpen(true);
         }
       } else {
-        setAlertMessage("An unexpected error occurred. Please try again.");
-        setAlertType("error");
-        setAlertOpen(true);
+        showAlert(
+          "An unexpected error occurred. Please try again.",
+          "error",
+          "local"
+        );
       }
     } finally {
       setIsLoading(false);
@@ -651,11 +664,10 @@ const RegisterForm = () => {
           </p>
         </form>
         <CustomAlert
-          open={alertOpen}
-          message={alertMessage}
-          type={alertType}
-          onClose={() => setAlertOpen(false)}
-          aria-live="assertive"
+          alerts={alerts}
+          onClose={(id) => {
+            setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+          }}
         />
       </div>
     </div>

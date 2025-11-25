@@ -34,9 +34,9 @@
 
 - **Landing Page** ✅ (Complete)
 - **Products Page** ✅ (Complete)
-- **News & Events Page** 🚧 (In progress – using mock data)
-- **Courses Page** 🔄 (In progress – will start with mock data)
-- **Blog Page** 📅 (Planned – will start with mock data)
+- **News & Events Page**✅ ( using mock data)
+- **Courses Page** ✅ (using mock data)
+- **Blog Page** ✅ (click to post not yet functional❗)
 - **About Us Page** ✅ (Complete – Static content)
 
 ### 🧭 Navigation Bar (Navbar)
@@ -45,7 +45,7 @@
 - User profile dropdown with options ✅
 - Authentication status display (login/logout) ✅
 - Search input with live product search results ✅
-- Shopping cart and wishlist icons 📅 (Planned)
+- Shopping cart and wishlist icons 🔄 (In progress)
 
 ### 🛒 E-commerce Features
 
@@ -70,13 +70,13 @@
   - Alphabetical (A–Z / Z–A)
   - Biggest Discount
 
-#### **Shopping Cart** 📅
+#### **Shopping Cart** ✅
 
 - Add to cart from listings (Quick Shop)
 - Dedicated product detail pages
 - Cart management via navbar
 
-#### **Wishlist / Favorites** 📅
+#### **Wishlist / Favorites** ✅
 
 - Save favorite products
 
@@ -121,7 +121,7 @@
 
 ### 🔧 Admin Dashboard
 
-- **Product Management** ✅ (CRUD Complete)
+- **Product Management** 🛠️ (temporarily not fully functional due to database changes)
   ![Admin Dashboard Preview](./public/admin_dashboard.png)
 
 - **Content Management** 📅
@@ -142,7 +142,7 @@
 1. **Clone the repository**
 
    ```bash
-   git clone [your-repo-url]
+   git clone https://github.com/pangphaichit/ecommerce-website.git
    cd oven-wheat-bakery
    ```
 
@@ -237,7 +237,8 @@
 
 - ✅ = Complete
 - 🔄 = Actively being implemented
-- 🚧 = In progress (using mock data)
+- 🚧 = In progress
 - 📅 = Planned
+- 🛠️ = fixing existing issues
 
 ---
