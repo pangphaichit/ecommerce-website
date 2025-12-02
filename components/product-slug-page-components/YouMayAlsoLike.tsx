@@ -1,7 +1,9 @@
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useFavorites } from "@/context/FavoritesContext";
 import {
   Heart,
   ChevronLeft,
@@ -15,21 +17,33 @@ import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import DrawerPanel from "@/components/DrawerPanel";
 import AddToCartDialog from "@/components/product-slug-page-components/AddToCartDialog";
+import CustomAlert from "@/components/ui/CustomAlert";
 import { Product } from "@/types/products";
+import { AlertItem } from "@/types/ui";
 
 interface Props {
   products: Product[];
 }
 
 export default function YouMayAlsoLike({ products }: Props) {
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   const { addToCart } = useCart();
+  const {
+    favorites,
+    addFavorite,
+    removeFavorite,
+    isFavorite,
+    loading: favLoading,
+  } = useFavorites();
   const [showDialog, setShowDialog] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+  // State for stacked alerts
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
 
   const allergenIcons = {
     Nuts: <Bean size={16} className="text-yellow-600" />,
@@ -96,6 +110,20 @@ export default function YouMayAlsoLike({ products }: Props) {
     setTimeout(() => {
       setShowDialog(false);
     }, 3000);
+  };
+
+  const showAlert = (
+    message: string,
+    type: "success" | "error",
+    scope: "local" | "global" = "local"
+  ) => {
+    if (scope === "local") {
+      const id = Date.now() + Math.random();
+
+      setAlerts((prev) => [{ id, message, type }, ...prev]);
+    } else {
+      console.warn("Global alert triggered:", message);
+    }
   };
 
   if (products.length === 0) return null;
@@ -185,12 +213,51 @@ export default function YouMayAlsoLike({ products }: Props) {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        alert(`Favorite ${product.name}!`);
+                        try {
+                          if (isFavorite(product.product_id)) {
+                            await removeFavorite(product.product_id);
+                            showAlert(
+                              "Removed from favorites",
+                              "success",
+                              "local"
+                            );
+                          } else {
+                            await addFavorite(product.product_id);
+                            // Show different message for guest vs logged-in
+                            if (isAuthenticated) {
+                              showAlert(
+                                "Added to favorites!",
+                                "success",
+                                "local"
+                              );
+                            } else {
+                              showAlert(
+                                "Added to favorites! Log in to sync",
+                                "success",
+                                "local"
+                              );
+                            }
+                          }
+                        } catch (err) {
+                          console.error("Error updating favorites:", err);
+                          showAlert("Failed to update favorite", "error");
+                        }
                       }}
                     >
-                      <Heart className="text-yellow-500" />
+                      <Heart
+                        className={`transition-colors duration-200 ${
+                          isFavorite(product.product_id)
+                            ? "text-yellow-400"
+                            : "text-gray-300"
+                        }`}
+                        fill={
+                          isFavorite(product.product_id)
+                            ? "currentColor"
+                            : "none"
+                        }
+                      />
                     </Button>
                   </div>
 
@@ -267,6 +334,12 @@ export default function YouMayAlsoLike({ products }: Props) {
           price={Number(selectedProduct.price ?? 0)}
         />
       )}
+      <CustomAlert
+        alerts={alerts}
+        onClose={(id) => {
+          setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+        }}
+      />
     </div>
   );
 }
