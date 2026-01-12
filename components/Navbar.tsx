@@ -266,6 +266,12 @@ const Navbar = () => {
     setShowPopup((prev) => !prev);
   };
 
+  const handleWishlistClick = () => {
+    router.push(
+      isAuthenticated ? "/customer/my-account/wishlist" : "/customer/wishlist"
+    );
+  };
+
   const handleCartClick = () => {
     setIsCartDrawerOpen(true);
   };
@@ -378,6 +384,7 @@ const Navbar = () => {
                 />
 
                 <Heart
+                  onClick={handleWishlistClick}
                   size={24}
                   className="text-gray-800 hover:text-yellow-600 cursor-pointer hidden lg:block"
                 />
