@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
 
 export const useFavoriteProducts = (productIds: string[]) => {
+  const { isAuthenticated } = useAuth();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const url = isAuthenticated
+    ? "/api/products/by-ids"
+    : "/api/products/by-ids-public";
 
   useEffect(() => {
     if (productIds.length === 0) {
@@ -14,10 +20,12 @@ export const useFavoriteProducts = (productIds: string[]) => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const { data } = await axios.post("/api/products/by-ids", {
-         productIds,
-        });
-       setProducts(data);
+        const { data } = await axios.post(
+          url,
+          { productIds },
+          isAuthenticated ? { withCredentials: true } : undefined
+        );
+        setProducts(data);
       } catch (err) {
         console.error("Failed to fetch favorite products", err);
       } finally {
