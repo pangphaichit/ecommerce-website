@@ -8,6 +8,7 @@ import FavoriteProductsList from "@/components/wishlist-page-components/Favorite
 import WishlistHeader from "@/components/wishlist-page-components/WishlistHeader";
 import Pagination from "@/components/ui/Pagination";
 import CustomAlert from "@/components/ui/CustomAlert";
+import SkeletonFavoriteProductList from "@/components/ui/SkeletonFavoriteProductList";
 import { AlertItem } from "@/types/ui";
 
 interface PaginationData {
@@ -22,7 +23,7 @@ export default function WishlistSection() {
   const { favorites, removeFavorite, loading } = useFavorites();
   const productIds = useMemo(
     () => favorites.map((f) => f.product_id),
-    [favorites]
+    [favorites],
   );
   const [sort, setSort] = useState<string>("newest");
   const [pagination, setPagination] = useState<PaginationData>({
@@ -35,7 +36,6 @@ export default function WishlistSection() {
 
   const { products, loading: productsLoading } =
     useFavoriteProducts(productIds);
-  console.log(products);
 
   const filterOptions = useMemo(
     () => [
@@ -48,7 +48,7 @@ export default function WishlistSection() {
       { label: "A to Z", value: "alphabet_asc" },
       { label: "Z to A", value: "alphabet_desc" },
     ],
-    []
+    [],
   );
 
   const favoriteAddedAtMap = useMemo(() => {
@@ -75,7 +75,7 @@ export default function WishlistSection() {
         setPagination((prev) => ({ ...prev, page: newPage }));
       }
     },
-    [pagination.totalPages]
+    [pagination.totalPages],
   );
 
   // Update pagination whenever favorites change
@@ -97,7 +97,7 @@ export default function WishlistSection() {
   const showAlert = (
     message: string,
     type: "success" | "error",
-    scope: "local" | "global" = "local"
+    scope: "local" | "global" = "local",
   ) => {
     if (scope === "local") {
       const id = Date.now() + Math.random();
@@ -108,17 +108,16 @@ export default function WishlistSection() {
     }
   };
 
-  //wip
   if (loading) {
     return (
-      <div className="p-8 text-center">
-        <h2 className="text-xl lg:text-2xl font-semibold">My Favourites</h2>
-        <p className="text-base lg:text-lg  mt-2 text-gray-600">
-          {isAuthenticated
-            ? "Your curated favorites, all in one place"
-            : "Start building your favorites collection—sign in now!"}
-        </p>
-        <p>Loading your favourites...</p>
+      <div className="px-4 lg:px-8 pb-4">
+        <WishlistHeader
+          isAuthenticated={isAuthenticated}
+          sort={sort}
+          onSortChange={handleSortChange}
+          options={filterOptions}
+        />
+        <SkeletonFavoriteProductList />
       </div>
     );
   }
@@ -151,7 +150,7 @@ export default function WishlistSection() {
   }
 
   return (
-    <div className="px-8">
+    <div className="px-4 lg:px-8 pb-4">
       <WishlistHeader
         isAuthenticated={isAuthenticated}
         sort={sort}

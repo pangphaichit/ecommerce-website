@@ -20,8 +20,8 @@ export default function WishlistHeader({
   options,
 }: Props) {
   return (
-    <div className="lg:my-4 lg:bg-gray-100 my-4 justify-between lg:p-4 lg:rounded-2xl flex flex-col lg:flex-row gap-3 items-start lg:items-center lg:mb-2">
-      <div className="flex gap-3">
+    <div className="lg:my-4 lg:bg-gray-100 justify-between lg:p-4 lg:rounded-2xl flex flex-col lg:flex-row gap-3 items-start lg:items-center lg:mb-2">
+      <div className="flex flex-col lg:flex-row gap-3">
         <h2 className="text-xl lg:text-2xl font-semibold text-yellow-700">
           {isAuthenticated ? "Your wishlist" : "Wishlist"}
         </h2>
@@ -31,7 +31,7 @@ export default function WishlistHeader({
             : "Sign in to save and view your favorites"}
         </p>
       </div>
-      <div className="mt-4 lg:mt-0 lg:w-52 mb-2">
+      <div className="lg:mt-4 lg:my-0 lg:w-52 mb-2 w-full">
         <Select
           name="sort"
           value={sort}
