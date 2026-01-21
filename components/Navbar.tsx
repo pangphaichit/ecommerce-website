@@ -267,8 +267,9 @@ const Navbar = () => {
   };
 
   const handleWishlistClick = () => {
+    setIsOpen(false);
     router.push(
-      isAuthenticated ? "/customer/my-account/wishlist" : "/customer/wishlist"
+      isAuthenticated ? "/customer/my-account/wishlist" : "/customer/wishlist",
     );
   };
 
@@ -279,14 +280,14 @@ const Navbar = () => {
   const handleCheckout = () => {
     setIsCartDrawerOpen(false);
     router.push(
-      isAuthenticated ? "/customer/my-account/checkout" : "/customer/checkout"
+      isAuthenticated ? "/customer/my-account/checkout" : "/customer/checkout",
     );
   };
 
   const handleViewMyCart = () => {
     setIsCartDrawerOpen(false);
     router.push(
-      isAuthenticated ? "/customer/my-account/cart" : "/customer/cart"
+      isAuthenticated ? "/customer/my-account/cart" : "/customer/cart",
     );
   };
 
@@ -709,28 +710,33 @@ const Navbar = () => {
             )}
 
             {/* Search Bar */}
-            <div className="relative flex flex-row items-center justify-center py-2 gap-4 mb-4 mx-4">
-              <Search
-                size={24}
-                className="text-gray-800 hover:text-yellow-600 cursor-pointer hidden lg:block"
-              />
-
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={onInputKeyDown}
-                className="px-4 py-2 w-80 border-b-2 border-gray-300 focus:outline-none focus:border-yellow-600 focus:text-gray-500 text-yellow-600 placeholder-gray-400"
-              />
-
-              <button
-                onClick={onSearch}
-                className="relative bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-r-md cursor-pointer"
-                aria-label="Search"
+            <div className="flex flex-row mb-4 mx-4">
+              <div className="relative flex flex-row gap-2">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={onInputKeyDown}
+                  className="px-4 py-2 border-b-2 border-gray-300 focus:outline-none focus:border-yellow-600 focus:text-gray-500 text-yellow-600 placeholder-gray-400"
+                />
+                <button
+                  onClick={onSearch}
+                  className="relative bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-r-md cursor-pointer"
+                  aria-label="Search"
+                >
+                  <Search size={25} />
+                </button>
+              </div>
+              <div
+                onClick={handleWishlistClick}
+                className="ml-1 p-2 flex items-center justify-center cursor-pointer"
               >
-                <Search size={20} />
-              </button>
+                <Heart
+                  size={25}
+                  className="text-gray-800 hover:text-yellow-600"
+                />
+              </div>
             </div>
 
             {/* Show loading, error, or products list */}
@@ -954,7 +960,7 @@ const Navbar = () => {
                               onClick={() =>
                                 updateQuantity(
                                   item.product_id,
-                                  Math.max(0, item.quantity - 1)
+                                  Math.max(0, item.quantity - 1),
                                 )
                               }
                               className="p-3 rounded-full text-gray-700 border-none  hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
@@ -968,7 +974,7 @@ const Navbar = () => {
                               onClick={() =>
                                 updateQuantity(
                                   item.product_id,
-                                  item.quantity + 1
+                                  item.quantity + 1,
                                 )
                               }
                               className="p-3 rounded-full text-gray-700 border-none hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
