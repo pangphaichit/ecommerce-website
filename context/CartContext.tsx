@@ -50,7 +50,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsLoading(true);
       try {
         if (isAuthenticated && userId) {
-          const { data: dbCart } = await axios.get("/api/cart");
+          const { data: dbCart } = await axios.get("/api/cart", {
+            withCredentials: true,
+          });
 
           setCart(dbCart);
         } else {
@@ -93,15 +95,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       // Add each guest cart item to the database via API
       await Promise.all(
         guestCart.map((item) =>
-          axios.post("/api/cart", {
-            product_id: item.product_id,
-            quantity: item.quantity,
-          })
+          axios.post(
+            "/api/cart",
+            {
+              product_id: item.product_id,
+              quantity: item.quantity,
+            },
+            { withCredentials: true }
+          )
         )
       );
 
       // ✅ Reload merged cart from API (includes product info)
-      const { data: dbCart } = await axios.get("/api/cart");
+      const { data: dbCart } = await axios.get("/api/cart", {
+        withCredentials: true,
+      });
       setCart(dbCart);
 
       sessionStorage.removeItem("guest-cart");
@@ -125,10 +133,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (isAuthenticated && userId) {
       try {
-        await axios.post("/api/cart", {
-          product_id: product.product_id,
-          quantity: qty,
-        });
+        await axios.post(
+          "/api/cart",
+          {
+            product_id: product.product_id,
+            quantity: qty,
+          },
+          { withCredentials: true }
+        );
       } catch (error) {
         console.error("Error adding to cart:", error);
         setCart(cart);
@@ -143,7 +155,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (isAuthenticated) {
       try {
-        await axios.delete("/api/cart", { data: { product_id: id } });
+        await axios.delete("/api/cart", {
+          data: { product_id: id },
+          withCredentials: true,
+        });
       } catch (error) {
         console.error("Error removing from cart:", error);
         setCart(oldCart);
@@ -162,7 +177,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (isAuthenticated) {
       try {
-        await axios.put("/api/cart", { product_id: id, quantity: qty });
+        await axios.put(
+          "/api/cart",
+          { product_id: id, quantity: qty },
+          { withCredentials: true }
+        );
       } catch (error) {
         console.error("Error updating quantity:", error);
         setCart(oldCart);
@@ -186,7 +205,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         await Promise.all(
           oldCart.map((item) =>
-            axios.delete("/api/cart", { data: { product_id: item.product_id } })
+            axios.delete("/api/cart", {
+              data: { product_id: item.product_id },
+              withCredentials: true,
+            })
           )
         );
       } catch (error) {

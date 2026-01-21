@@ -71,13 +71,19 @@ export default async function handler(
 
     const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60; // 30 days or 1 day
     const expires = new Date(Date.now() + maxAge * 1000).toUTCString();
+
+    const isProd = process.env.NODE_ENV === "production"; // check if production
+
+    const sameSiteFlag = isProd ? "Strict" : "Lax";
+    const secureFlag = isProd ? "; Secure" : "";
+
     const sessionCookie = `user_session=${encodeURIComponent(
       `${userId}:${role_name}`
-    )}; Path=/; Max-Age=${maxAge}; Expires=${expires}; HttpOnly; Secure; SameSite=Strict`;
+    )}; Path=/; Max-Age=${maxAge}; Expires=${expires}; ; HttpOnly${secureFlag}; SameSite=${sameSiteFlag}`;
     const roleCookie = `user_role=${encodeURIComponent(
       role_name
-    )}; Path=/; Max-Age=${maxAge}; Expires=${expires}; HttpOnly; Secure; SameSite=Strict`;
-    const tokenCookie = `token=${token}; Path=/; Max-Age=${maxAge}; Expires=${expires}; HttpOnly; Secure; SameSite=Strict`;
+    )}; Path=/; Max-Age=${maxAge}; Expires=${expires}; ; HttpOnly${secureFlag}; SameSite=${sameSiteFlag}`;
+    const tokenCookie = `token=${token}; Path=/; Max-Age=${maxAge}; ; HttpOnly${secureFlag}; SameSite=${sameSiteFlag}`;
 
     res.setHeader("Set-Cookie", [sessionCookie, roleCookie, tokenCookie]);
 

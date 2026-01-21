@@ -42,13 +42,23 @@ export default async function handler(
     // GET - Fetch favorites
     if (req.method === "GET") {
       const result = await client.query(
-        `SELECT product_id, created_at
-         FROM favorites
-         WHERE user_id = $1
-         ORDER BY created_at DESC`,
-        [userId]
-      );
+        `
+      SELECT
+        f.product_id,
+        f.created_at AS added_at,
+        p.name,
+        p.price,
+        p.image_url
+      FROM favorites f
+      JOIN products p ON p.product_id = f.product_id
+      WHERE f.user_id = $1
+      ORDER BY f.created_at DESC
+      `,
+      [userId]
+    );
+  
       return res.status(200).json(result.rows);
+      
     }
 
     // POST - Add
