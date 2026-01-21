@@ -330,8 +330,55 @@ export default function ProductsCarousel({
                       >
                         Add to Cart
                       </Button>
-                      <Button variant="ghost" size="icon-sm">
-                        <Heart className="text-yellow-500" />
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            if (isFavorite(product.product_id)) {
+                              await removeFavorite(product.product_id);
+                              showAlert(
+                                "Removed from favorites",
+                                "success",
+                                "local"
+                              );
+                            } else {
+                              await addFavorite(product.product_id);
+                              // Show different message for guest vs logged-in
+                              if (isAuthenticated) {
+                                showAlert(
+                                  "Added to favorites!",
+                                  "success",
+                                  "local"
+                                );
+                              } else {
+                                showAlert(
+                                  "Added to favorites! Log in to sync",
+                                  "success",
+                                  "local"
+                                );
+                              }
+                            }
+                          } catch (err) {
+                            console.error("Error updating favorites:", err);
+                            showAlert("Failed to update favorite", "error");
+                          }
+                        }}
+                      >
+                        <Heart
+                          size="icon-sm"
+                          className={`transition-colors duration-200 ${
+                            isFavorite(product.product_id)
+                              ? "text-yellow-400"
+                              : "text-gray-300"
+                          }`}
+                          fill={
+                            isFavorite(product.product_id)
+                              ? "currentColor"
+                              : "none"
+                          }
+                        />
                       </Button>
                     </div>
                   )}

@@ -4,7 +4,7 @@ import axios from "axios";
 
 interface FavoriteItem {
   product_id: string;
-  added_at?: string;
+  added_at: string;
 }
 
 interface FavoritesContextType {
@@ -43,7 +43,12 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         if (isAuthenticated) {
           const { data } = await axios.get("/api/favorites");
-          setFavorites(data);
+          setFavorites(
+            data.map((f: FavoriteItem) => ({
+              product_id: f.product_id,
+              added_at: f.added_at,
+            }))
+          );
         } else {
           const guestFavs = localStorage.getItem(GUEST_STORAGE_KEY);
           setFavorites(guestFavs ? JSON.parse(guestFavs) : []);
@@ -71,9 +76,15 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({
         const items: FavoriteItem[] = JSON.parse(guestFavs);
         const productIds = items.map((item) => item.product_id);
         if (productIds.length > 0) {
-          await axios.post("/api/favorites/bulk", { products: productIds });
+          await axios.post(
+            "/api/favorites/bulk",
+            { products: productIds },
+            { withCredentials: true }
+          );
           localStorage.removeItem(GUEST_STORAGE_KEY);
-          const { data } = await axios.get("/api/favorites");
+          const { data } = await axios.get("/api/favorites", {
+            withCredentials: true,
+          });
           setFavorites(data);
         }
       } catch (err) {
@@ -102,7 +113,11 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     try {
-      await axios.post("/api/favorites", { product_id });
+      await axios.post(
+        "/api/favorites",
+        { product_id },
+        { withCredentials: true }
+      );
       setFavorites((prev) => [...prev, newFavorite]);
     } catch (err: any) {
       if (err.response?.status !== 409) {
@@ -124,7 +139,10 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     try {
-      await axios.delete("/api/favorites", { data: { product_id } });
+      await axios.delete("/api/favorites", {
+        data: { product_id },
+        withCredentials: true,
+      });
       setFavorites((prev) => prev.filter((f) => f.product_id !== product_id));
     } catch (err) {
       console.error("Error removing favorite:", err);

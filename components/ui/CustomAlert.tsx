@@ -15,7 +15,7 @@ interface CustomAlertProps {
 const CustomAlert: React.FC<CustomAlertProps> = ({
   alerts = [],
   onClose,
-  autoHideDuration = 5000,
+  autoHideDuration = 3000,
   position = { vertical: "bottom", horizontal: "right" },
 }) => {
   const alertArray = Array.isArray(alerts) ? alerts : [alerts];
@@ -27,6 +27,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
           key={alert.id}
           open={true}
           anchorOrigin={position}
+           onClose={() => onClose(alert.id)}
           autoHideDuration={autoHideDuration}
           aria-live="assertive"
           aria-atomic="true"
