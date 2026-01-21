@@ -19,7 +19,7 @@ interface PaginationData {
 }
 
 export default function WishlistSection() {
-  const { isAuthenticated, logout, userId } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { favorites, removeFavorite, loading } = useFavorites();
   const productIds = useMemo(
     () => favorites.map((f) => f.product_id),
@@ -41,10 +41,8 @@ export default function WishlistSection() {
     () => [
       { label: "Newest First", value: "newest" },
       { label: "Oldest First", value: "oldest" },
-      { label: "Best Selling", value: "best_selling" },
       { label: "Price: Low to High", value: "price_low" },
       { label: "Price: High to Low", value: "price_high" },
-      { label: "Biggest Discount", value: "discount_high" },
       { label: "A to Z", value: "alphabet_asc" },
       { label: "Z to A", value: "alphabet_desc" },
     ],
@@ -61,6 +59,67 @@ export default function WishlistSection() {
       added_at: favoriteAddedAtMap.get(p.product_id),
     }));
   }, [products, favoriteAddedAtMap]);
+
+  const sortedProducts = useMemo(() => {
+    const list = [...mergedProducts];
+
+    switch (sort) {
+      case "newest":
+        return list.sort((a, b) => {
+          const timeDiff =
+            new Date(b.added_at ?? 0).getTime() -
+            new Date(a.added_at ?? 0).getTime();
+
+          if (timeDiff !== 0) return timeDiff;
+
+          // tie-breaker (alphabetical or product_id)
+          return a.product_id.localeCompare(b.product_id);
+        });
+
+      case "oldest":
+        return list.sort((a, b) => {
+          const timeDiff =
+            new Date(a.added_at ?? 0).getTime() -
+            new Date(b.added_at ?? 0).getTime();
+
+          if (timeDiff !== 0) return timeDiff;
+
+          // tie-breaker (alphabetical or product_id)
+          return a.product_id.localeCompare(b.product_id);
+        });
+
+      case "price_low":
+        return list.sort((a, b) => {
+          const priceA = Number(a.price);
+          const priceB = Number(b.price);
+
+          if (isNaN(priceA)) return 1;
+          if (isNaN(priceB)) return -1;
+
+          return priceA - priceB;
+        });
+
+      case "price_high":
+        return list.sort((a, b) => {
+          const priceA = Number(a.price);
+          const priceB = Number(b.price);
+
+          if (isNaN(priceA)) return 1;
+          if (isNaN(priceB)) return -1;
+
+          return priceB - priceA;
+        });
+
+      case "alphabet_asc":
+        return list.sort((a, b) => a.name.localeCompare(b.name));
+
+      case "alphabet_desc":
+        return list.sort((a, b) => b.name.localeCompare(a.name));
+
+      default:
+        return list;
+    }
+  }, [mergedProducts, sort]);
 
   // Handle sort change
   const handleSortChange = useCallback((newSort: string) => {
@@ -91,8 +150,8 @@ export default function WishlistSection() {
   const currentProducts = useMemo(() => {
     const start = (pagination.page - 1) * pagination.limit;
     const end = start + pagination.limit;
-    return mergedProducts.slice(start, end);
-  }, [mergedProducts, pagination.page, pagination.limit]);
+    return sortedProducts.slice(start, end);
+  }, [sortedProducts, pagination.page, pagination.limit]);
 
   const showAlert = (
     message: string,

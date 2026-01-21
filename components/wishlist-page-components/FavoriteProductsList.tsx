@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { Heart } from "lucide-react";
@@ -25,17 +24,8 @@ export default function FavoriteProductsList({
   removeFavorite,
 }: Props) {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
-  const {
-    favorites,
-    addFavorite,
-    isFavorite,
-    loading: favLoading,
-  } = useFavorites();
+  const { isFavorite } = useFavorites();
 
-  // wip const [selectedFilter, setSelectedFilter] = useState("newest");
-
-  console.log(products);
   const handleProductClick = (slug: string) => {
     router.push(`/products/${slug}`);
   };
