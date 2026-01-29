@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
+import { useSearchParams } from "next/navigation";
 
 interface Category {
   category_id: number;
@@ -12,13 +13,25 @@ interface Category {
   category_slug: string;
 }
 
-interface CategoriesDisplayProps {
-  categories: Category[];
-}
-
 interface PositionedCategory extends Category {
   gridColumn: string;
   gridRow: string;
+}
+
+interface PaginationData {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+interface Filters {
+  searchQuery: string;
+  priceRange: number;
+  categories: number[];
+  ingredients: string[];
+  collections: string[];
+  occasionals: string[];
 }
 
 const computeGridPlacement = (categories: Category[]): PositionedCategory[] => {
@@ -33,9 +46,37 @@ export default function CategoriesDisplay() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const router = useRouter();
+  const [filters, setFilters] = useState<Filters>({
+    searchQuery: "",
+    priceRange: 30,
+    categories: [],
+    ingredients: [],
+    collections: [],
+    occasionals: [],
+  });
+
+  const [pagination, setPagination] = useState<PaginationData>({
+    total: 0,
+    page: 1,
+    limit: 12,
+    totalPages: 0,
+  });
+
+  useEffect(() => {
+    const { category_id } = router.query;
+
+    if (category_id) {
+      setFilters((prev) => ({
+        ...prev,
+        categories: [Number(category_id)],
+      }));
+
+      setPagination((prev) => ({ ...prev, page: 1 }));
+    }
+  }, [router.query.category_id]);
 
   const handleCategoryClick = (category: Category) => {
-    router.push(`/products/categories/${category.category_slug}`);
+    router.push(`/products?category=${category.category_slug}`);
   };
 
   const itemsPerSlide = 4;
@@ -110,7 +151,7 @@ export default function CategoriesDisplay() {
                       </p>
                     </div>
                   </div>
-                ) : null
+                ) : null,
               )}
             </div>
 
