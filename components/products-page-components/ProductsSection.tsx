@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import axios from "axios";
+import { useRouter } from "next/router";
 import { X } from "lucide-react";
 import ProductList from "@/components/products-page-components/ProductList";
 import FilterSidebar from "@/components/products-page-components/FilterSidebar";
@@ -25,6 +26,7 @@ interface Filters {
 }
 
 export default function ProductSection() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +69,7 @@ export default function ProductSection() {
       { label: "A to Z", value: "alphabet_asc" },
       { label: "Z to A", value: "alphabet_desc" },
     ],
-    []
+    [],
   );
 
   // Make these static to avoid recreating on every render
@@ -90,7 +92,7 @@ export default function ProductSection() {
       "Coffee",
       "Rose Petals",
     ],
-    []
+    [],
   );
 
   const collectionsList = useMemo(
@@ -100,7 +102,7 @@ export default function ProductSection() {
       "Starlight Series",
       "Happy Birthday!",
     ],
-    []
+    [],
   );
 
   const seasonalList = useMemo(
@@ -113,7 +115,7 @@ export default function ProductSection() {
       "Mother's Day",
       "Father's Day",
     ],
-    []
+    [],
   );
 
   // Fetch categories on mount
@@ -125,13 +127,32 @@ export default function ProductSection() {
       } catch (err) {
         console.error("Error fetching categories:", err);
         setError(
-          err instanceof Error ? err.message : "Failed to load categories"
+          err instanceof Error ? err.message : "Failed to load categories",
         );
       }
     };
 
     fetchCategories();
   }, []);
+
+  // Handle URL parameter and set category filter
+  useEffect(() => {
+    const categorySlug = router.query.category as string;
+
+    if (categorySlug && categoriesData.length > 0) {
+      const category = categoriesData.find(
+        (cat) => cat.category_slug === categorySlug,
+      );
+
+      if (category) {
+        setFilters((prev) => ({
+          ...prev,
+          categories: [category.category_id],
+        }));
+        setPagination((prev) => ({ ...prev, page: 1 }));
+      }
+    }
+  }, [router.query.category, categoriesData]);
 
   const handleFilterChange = useCallback((newFilters: Partial<Filters>) => {
     setFilters((prev) => ({
@@ -164,7 +185,7 @@ export default function ProductSection() {
       filters.ingredients.length > 0 ||
       filters.collections.length > 0 ||
       filters.occasionals.length > 0,
-    [filters]
+    [filters],
   );
 
   // Memoize request parameters to detect duplicate calls
@@ -273,7 +294,7 @@ export default function ProductSection() {
         setPagination((prev) => ({ ...prev, page: newPage }));
       }
     },
-    [pagination.totalPages]
+    [pagination.totalPages],
   );
 
   // Handle sort change
