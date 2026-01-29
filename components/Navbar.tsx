@@ -710,15 +710,15 @@ const Navbar = () => {
             )}
 
             {/* Search Bar */}
-            <div className="flex flex-row mb-4 mx-4">
-              <div className="relative flex flex-row gap-2">
+            <div className="flex flex-row mb-4 mx-4 flex-1 max-w-full justify-between">
+              <div className="relative flex flex-row gap-2 w-full">
                 <input
                   type="text"
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={onInputKeyDown}
-                  className="px-4 py-2 border-b-2 border-gray-300 focus:outline-none focus:border-yellow-600 focus:text-gray-500 text-yellow-600 placeholder-gray-400"
+                  className="px-4 py-2 border-b-2 border-gray-300 focus:outline-none focus:border-yellow-600 focus:text-gray-500 text-yellow-600 placeholder-gray-400 flex-1 "
                 />
                 <button
                   onClick={onSearch}
@@ -730,7 +730,7 @@ const Navbar = () => {
               </div>
               <div
                 onClick={handleWishlistClick}
-                className="ml-1 p-2 flex items-center justify-center cursor-pointer"
+                className="ml-1 pl-2 flex items-center justify-center cursor-pointer"
               >
                 <Heart
                   size={25}
