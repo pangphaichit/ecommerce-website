@@ -28,7 +28,7 @@ export default function AddToCartDialog({
 
   const handleViewMyCart = () => {
     router.push(
-      isAuthenticated ? "/customer/my-account/cart" : "/customer/cart"
+      isAuthenticated ? "/customer/my-account/cart" : "/customer/cart",
     );
   };
 
@@ -123,7 +123,7 @@ export default function AddToCartDialog({
           <Button
             variant="ghost"
             onClick={onClose}
-            className="w-full py-3 text-base font-semibold rounded-full hover:bg-transparent underline underline-offset-3 decoration-1"
+            className="w-full py-3 text-base font-semibold rounded-full hover:bg-transparent underline underline-offset-3 decoration-1 text-gray-600"
           >
             Continue Shopping
           </Button>
