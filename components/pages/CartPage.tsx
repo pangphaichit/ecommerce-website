@@ -12,7 +12,7 @@ import { ShoppingCart, Minus, Plus, Trash2 } from "lucide-react";
 import CartSection from "@/components/cart-page-component/CartSection";
 
 const CartPage = () => {
-   const { userId, logout } = useAuth();
+  const { userId, logout } = useAuth();
   const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
@@ -32,12 +32,11 @@ const CartPage = () => {
     <div>
       <NotificationBar />
       <Navbar />
-      <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="w-full mx-auto px-4 py-8">
         <CartSection />
       </div>
     </div>
   );
 };
-
 
 export default CartPage;
