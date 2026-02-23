@@ -20,15 +20,11 @@ import {
 import CartSection from "@/components/cart-page-component/CartSection";
 
 const GuestCartPage = () => {
-
-
-  
-
   return (
     <div>
       <NotificationBar />
       <Navbar />
-      <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="w-full mx-auto px-4 py-8">
         <CartSection />
       </div>
     </div>
